@@ -1,16 +1,19 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { getStorage, StorageKeys } from '../utils/storage';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
-  template: `
-    <h1>Welcome to {{title}}!</h1>
-
-    <router-outlet />
-  `,
-  styleUrl: './app.component.css'
+  template: ` <router-outlet /> `,
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
-  title = 'translatoo';
+  constructor() {
+    document.documentElement.classList.toggle(
+      'dark',
+      getStorage(StorageKeys.theme) === 'dark' ||
+        (!getStorage(StorageKeys.theme) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    );
+  }
 }
