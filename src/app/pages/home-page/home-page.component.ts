@@ -8,4 +8,8 @@ import { HeaderComponent } from '../../components/header/header.component';
   styleUrl: './home-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomePageComponent {}
+export class HomePageComponent {
+  handlePrimaryClick() {
+    console.log('Primary button clicked');
+  }
+}
