@@ -1,33 +1,31 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { SupabaseService } from '../../../../services/supabase.service';
-import { Project } from '../../../../models/projects';
-import { RouterModule } from '@angular/router';
+import { ProjectWithLanguages } from '../../../../models/projects';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { MatListModule } from '@angular/material/list';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
-  selector: 'app-projects',
+  selector: 'app-project',
   imports: [
     MatToolbarModule,
     MatDividerModule,
-    MatListModule,
-    MatIconModule,
-    MatCardModule,
     MatButtonModule,
     MatProgressBarModule,
+    MatListModule,
+    MatCardModule,
     RouterModule,
   ],
   template: `
     <mat-toolbar>
-      <span>Projects</span>
+      <span>Project</span>
       <div class="flex-grow"></div>
-      <button mat-flat-button>Create project</button>
+      <button mat-flat-button>Add language</button>
     </mat-toolbar>
     <mat-divider></mat-divider>
     <div class="w-full p-10">
@@ -35,14 +33,17 @@ import { RouterModule } from '@angular/router';
         <mat-progress-bar mode="query"></mat-progress-bar>
       } @else {
         <mat-list>
-          @for (project of projects; track project.id) {
+          @for (language of project?.languages; track language.id) {
             <mat-card appearance="raised">
               <mat-card-content>
                 <mat-list-item>
-                  <div matListItemTitle>{{ project.name }}</div>
+                  <div matListItemTitle>{{ language.name }}</div>
+                  @if (language.format) {
+                    <div matListItemLine>{{ language.format }} format</div>
+                  }
                   <div class="flex-grow"></div>
                   <div matListItemMeta>
-                    <a [routerLink]="['/', 'projects', project.id]" mat-stroked-button>Open</a>
+                    <a [routerLink]="['/', 'languages', language.id]" mat-stroked-button>Open</a>
                   </div>
                 </mat-list-item>
               </mat-card-content>
@@ -52,25 +53,33 @@ import { RouterModule } from '@angular/router';
       }
     </div>
   `,
-  styleUrl: './projects.component.css',
+  styleUrl: './project.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProjectsComponent {
-  projects: Project[] = [];
+export class ProjectComponent {
+  project: ProjectWithLanguages | null = null;
   loading = signal<boolean>(true);
   private supabaseService: SupabaseService = inject(SupabaseService);
+  private readonly route = inject(ActivatedRoute);
 
   constructor() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) {
+      console.error('No project ID provided in the route.');
+      this.loading.set(false);
+      return;
+    }
     this.supabaseService
-      .getProjects()
+      .getProject(id)
       .pipe(takeUntilDestroyed())
       .subscribe({
-        next: projects => {
-          this.projects = projects;
+        next: project => {
+          this.project = project;
+          console.log('Project loaded:', project);
           this.loading.set(false);
         },
         error: error => {
-          console.error('Error loading projects:', error);
+          console.error('Error loading project:', error);
           this.loading.set(false);
         },
       });

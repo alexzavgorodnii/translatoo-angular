@@ -22,6 +22,16 @@ export const routes: Routes = [
         path: 'projects',
         loadComponent: () => import('./pages/app-page/projects/projects.component').then(m => m.ProjectsComponent),
       },
+      {
+        title: 'Project | Translatoo',
+        path: 'projects/:id',
+        loadComponent: () => import('./pages/app-page/project/project.component').then(m => m.ProjectComponent),
+      },
+      {
+        title: 'Language | Translatoo',
+        path: 'languages/:id',
+        loadComponent: () => import('./pages/app-page/language/language.component').then(m => m.LanguageComponent),
+      },
     ],
   },
   {

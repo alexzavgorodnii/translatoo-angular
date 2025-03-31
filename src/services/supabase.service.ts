@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient, OAuthResponse, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs/internal/Observable';
-import { Project } from '../models/projects';
+import { Project, ProjectWithLanguages } from '../models/projects';
 
 @Injectable({
   providedIn: 'root',
@@ -72,6 +72,24 @@ export class SupabaseService {
             observer.error(response.error);
           } else {
             observer.next(response.data as Project[]);
+            observer.complete();
+          }
+        });
+    });
+  }
+
+  getProject(id: string): Observable<ProjectWithLanguages> {
+    return new Observable(observer => {
+      this.supabase
+        .from('project')
+        .select('*, languages:language(*)')
+        .match({ id })
+        .single()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as ProjectWithLanguages);
             observer.complete();
           }
         });
