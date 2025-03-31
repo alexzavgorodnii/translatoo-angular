@@ -1,3 +1,13 @@
 :host {
-  display: block;
+  --mat-sidenav-container-width: 250px;
+  --mat-divider-color: var(--mat-sys-primary-container);
+  .sidebar {
+    border-style: solid;
+    border-width: 0;
+    background-color: var(--mdc-elevated-card-container-color, var(--mat-sys-surface-container-low));
+    border-color: var(--mdc-elevated-card-container-color, var(--mat-sys-surface-container-low));
+    border-top-right-radius: var(--mdc-elevated-card-container-shape, var(--mat-sys-corner-medium));
+    border-bottom-right-radius: var(--mdc-elevated-card-container-shape, var(--mat-sys-corner-medium));
+    box-shadow: var(--mdc-elevated-card-container-elevation, var(--mat-sys-level1));
+  }
 }
