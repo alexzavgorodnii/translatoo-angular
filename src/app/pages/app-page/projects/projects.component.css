@@ -1,3 +1,7 @@
 :host {
   display: block;
+  --mat-toolbar-container-background-color: var(
+    --mdc-elevated-card-container-color,
+    var(--mat-sys-surface-container-low)
+  );
 }

@@ -13,16 +13,19 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        title: 'Dashboard | Translatoo',
         path: 'dashboard',
         loadComponent: () => import('./pages/app-page/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
+        title: 'Projects | Translatoo',
         path: 'projects',
         loadComponent: () => import('./pages/app-page/projects/projects.component').then(m => m.ProjectsComponent),
       },
     ],
   },
   {
+    title: 'Sign In | Translatoo',
     path: 'sign-in',
     loadComponent: () => import('./pages/sign-in/sign-in.component').then(m => m.SignInComponent),
   },

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient, OAuthResponse, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs/internal/Observable';
+import { Project } from '../models/projects';
 
 @Injectable({
   providedIn: 'root',
@@ -12,11 +13,12 @@ export class SupabaseService {
     return this.user;
   }
   private supabase: SupabaseClient;
+  get currentSupabase(): SupabaseClient {
+    return this.supabase;
+  }
   constructor() {
     this.supabase = createClient(environment.SUPABASE_URL, environment.SUPABASE_KEY);
     this.supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event);
-      console.log('Auth session:', session);
       if (event === 'SIGNED_IN') {
         this.user = session?.user ?? null;
       }
@@ -57,6 +59,22 @@ export class SupabaseService {
         observer.next(response.data.session !== null);
         observer.complete();
       });
+    });
+  }
+
+  getProjects(): Observable<Project[]> {
+    return new Observable(observer => {
+      this.supabase
+        .from('project')
+        .select('*')
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as Project[]);
+            observer.complete();
+          }
+        });
     });
   }
 }

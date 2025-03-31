@@ -1,42 +1,82 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterModule, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { LucideAngularModule, Package } from 'lucide-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
   selector: 'app-app-page',
-  imports: [RouterOutlet, MatSidenavModule, LucideAngularModule, MatButtonModule, MatDividerModule, MatIconModule],
+  imports: [
+    RouterOutlet,
+    RouterModule,
+    MatSidenavModule,
+    LucideAngularModule,
+    MatButtonModule,
+    MatDividerModule,
+    MatIconModule,
+    MatListModule,
+    MatToolbarModule,
+  ],
   template: `
     <mat-drawer-container class="h-screen w-full">
       <mat-drawer mode="side" opened class="sidebar">
-        <div class="flex flex-col p-3">
-          <a class="flex flex-row items-center gap-2" [href]="'/'">
-            <i-lucide [img]="Package" class="h-8 w-8"></i-lucide>
-            <span>Translatoo</span>
-          </a>
+        <div class="flex h-full flex-col">
+          <div class="flex flex-col">
+            <mat-toolbar>
+              <span>Translatoo</span>
+            </mat-toolbar>
+            <mat-divider></mat-divider>
+            <mat-nav-list class="!p-3">
+              <a
+                mat-list-item
+                routerLink="/dashboard"
+                routerLinkActive="active"
+                #rlaDashboard="routerLinkActive"
+                [activated]="rlaDashboard.isActive"
+                [routerLinkActiveOptions]="{ exact: true }"
+              >
+                <mat-icon matListItemIcon>dashboard</mat-icon>
+                <span matListItemTitle>Dashboard</span>
+              </a>
+              <a
+                mat-list-item
+                routerLink="/projects"
+                routerLinkActive="active"
+                #rlaProjects="routerLinkActive"
+                [activated]="rlaProjects.isActive"
+                [routerLinkActiveOptions]="{ exact: true }"
+              >
+                <mat-icon matListItemIcon>folder_copy</mat-icon>
+                <span matListItemTitle>Projects</span>
+              </a>
+            </mat-nav-list>
+          </div>
+          <div class="flex-grow"></div>
+          <div>
+            <mat-divider></mat-divider>
+            <mat-nav-list class="!p-3">
+              <a
+                mat-list-item
+                routerLink="/profile"
+                routerLinkActive="active"
+                #rlaProfile="routerLinkActive"
+                [activated]="rlaProfile.isActive"
+                [routerLinkActiveOptions]="{ exact: true }"
+              >
+                <mat-icon matListItemIcon>person</mat-icon>
+                <span matListItemTitle>Go to profile</span>
+              </a>
+            </mat-nav-list>
+          </div>
         </div>
-        <mat-divider></mat-divider>
-        <nav class="flex flex-col p-3">
-          <ul>
-            <li>
-              <a mat-button href="https://www.google.com/" target="_blank" class="w-full !justify-start">
-                <mat-icon>dashboard</mat-icon>
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <a mat-button href="https://www.google.com/" target="_blank" class="w-full !justify-start">
-                <mat-icon>folder_copy</mat-icon>
-                Projects
-              </a>
-            </li>
-          </ul>
-        </nav>
       </mat-drawer>
-      <mat-drawer-content><router-outlet /></mat-drawer-content>
+      <mat-drawer-content>
+        <router-outlet></router-outlet>
+      </mat-drawer-content>
     </mat-drawer-container>
   `,
   styleUrl: './app-page.component.css',

@@ -10,7 +10,6 @@ export const authGuard: CanActivateFn = (route, state) => {
     .isAuth()
     .pipe(
       map(isAuth => {
-        console.log('isAuth:', isAuth);
         if (!isAuth) {
           router.navigate(['/sign-in']);
           return false;

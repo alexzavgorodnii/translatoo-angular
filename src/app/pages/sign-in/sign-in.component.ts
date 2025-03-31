@@ -30,7 +30,18 @@ export class SignInComponent {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly router: Router,
-  ) {}
+  ) {
+    this.supabaseService.isAuth().subscribe({
+      next: isAuth => {
+        if (isAuth) {
+          this.router.navigate(['/dashboard']);
+        }
+      },
+      error: error => {
+        console.error('Error checking authentication:', error);
+      },
+    });
+  }
 
   googleLogin() {
     this.supabaseService.googleLogin().subscribe({
