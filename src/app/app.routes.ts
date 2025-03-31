@@ -5,7 +5,22 @@ export const routes: Routes = [
   {
     path: '',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/home-page/home-page.component').then(m => m.HomePageComponent),
+    loadComponent: () => import('./pages/app-page/app-page.component').then(m => m.AppPageComponent),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/app-page/dashboard/dashboard.component').then(m => m.DashboardComponent),
+      },
+      {
+        path: 'projects',
+        loadComponent: () => import('./pages/app-page/projects/projects.component').then(m => m.ProjectsComponent),
+      },
+    ],
   },
   {
     path: 'sign-in',
