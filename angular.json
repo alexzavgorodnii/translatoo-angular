@@ -52,10 +52,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.css"
-            ],
+            "styles": ["src/styles.css", "src/styles/theme.css"],
             "scripts": []
           },
           "configurations": {
@@ -120,10 +117,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.css"
-            ],
+            "styles": ["src/styles.css", "src/styles/theme.css"],
             "scripts": []
           }
         },

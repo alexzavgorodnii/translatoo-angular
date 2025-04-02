@@ -3,6 +3,7 @@ import { createClient, OAuthResponse, SupabaseClient, User } from '@supabase/sup
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs/internal/Observable';
 import { Project, ProjectWithLanguages } from '../models/projects';
+import { LanguageWithTranslations } from '../models/languages';
 
 @Injectable({
   providedIn: 'root',
@@ -90,6 +91,25 @@ export class SupabaseService {
             observer.error(response.error);
           } else {
             observer.next(response.data as ProjectWithLanguages);
+            observer.complete();
+          }
+        });
+    });
+  }
+
+  getLanguage(id: string): Observable<LanguageWithTranslations> {
+    return new Observable(observer => {
+      this.supabase
+        .from('language')
+        .select('* , translations:translation(*)')
+        .match({ id })
+        .order('order', { referencedTable: 'translation', ascending: true })
+        .single()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as LanguageWithTranslations);
             observer.complete();
           }
         });

@@ -33,6 +33,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
             <mat-nav-list class="!p-3">
               <a
                 mat-list-item
+                class="m-b-2"
                 routerLink="/dashboard"
                 routerLinkActive="active"
                 #rlaDashboard="routerLinkActive"

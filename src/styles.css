@@ -11,7 +11,3 @@ body {
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
-
-html {
-  --mat-sys-corner-full: 10px;
-}

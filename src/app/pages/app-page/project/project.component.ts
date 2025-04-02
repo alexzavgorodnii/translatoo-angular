@@ -23,7 +23,7 @@ import { MatCardModule } from '@angular/material/card';
   ],
   template: `
     <mat-toolbar>
-      <span>Project</span>
+      <span>{{ title() }}</span>
       <div class="flex-grow"></div>
       <button mat-flat-button>Add language</button>
     </mat-toolbar>
@@ -59,6 +59,7 @@ import { MatCardModule } from '@angular/material/card';
 export class ProjectComponent {
   project: ProjectWithLanguages | null = null;
   loading = signal<boolean>(true);
+  title = signal<string>('Project');
   private supabaseService: SupabaseService = inject(SupabaseService);
   private readonly route = inject(ActivatedRoute);
 
@@ -75,6 +76,7 @@ export class ProjectComponent {
       .subscribe({
         next: project => {
           this.project = project;
+          this.title.set('Project ' + project.name);
           console.log('Project loaded:', project);
           this.loading.set(false);
         },

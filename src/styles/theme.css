@@ -1,0 +1,85 @@
+html {
+  --mat-sys-background: #f9fafb;
+  --mat-sys-surface: #ffffff;
+  --mat-sys-surface-container: #f3f4f6;
+  --mat-sys-surface-variant: #f3f4f6;
+  --mat-sys-on-surface: #111113;
+  --mat-sys-on-background: #111113;
+
+  --mat-sys-primary: hsl(47.9 95.8% 53.1%);
+  --mat-sys-on-primary: #111113;
+  --mat-sys-primary-container: #fff7db;
+  --mat-sys-on-primary-container: #3e2b00;
+
+  --mat-sys-surface-tint: hsl(47.9 95.8% 53.1%);
+
+  --mat-sys-secondary: #6b7280;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #e5e7eb;
+  --mat-sys-on-secondary-container: #1f2937;
+
+  --mat-sys-tertiary: #ea580c;
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #ffedd5;
+
+  --mat-sys-error: #ef4444;
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-error-container: #fee2e2;
+  --mat-sys-on-error-container: #991b1b;
+
+  --mat-sys-outline: #d1d5db;
+  --mat-sys-outline-variant: #e5e7eb;
+  --mat-sys-shadow: rgba(0, 0, 0, 0.12);
+
+  --mat-sys-level1: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --mat-sys-level2: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --mat-sys-level3: 0 2px 6px rgba(0, 0, 0, 0.07);
+  --mat-sys-level4: 0 4px 8px rgba(0, 0, 0, 0.07);
+  --mat-sys-level5: 0 8px 16px rgba(0, 0, 0, 0.08);
+
+  --mat-sys-display-large-font: 'Inter', sans-serif;
+  --mat-sys-display-medium-font: 'Inter', sans-serif;
+  --mat-sys-display-small-font: 'Inter', sans-serif;
+  --mat-sys-headline-large-font: 'Inter', sans-serif;
+  --mat-sys-headline-medium-font: 'Inter', sans-serif;
+  --mat-sys-headline-small-font: 'Inter', sans-serif;
+  --mat-sys-title-large-font: 'Inter', sans-serif;
+  --mat-sys-title-medium-font: 'Inter', sans-serif;
+  --mat-sys-title-small-font: 'Inter', sans-serif;
+  --mat-sys-body-large-font: 'Inter', sans-serif;
+  --mat-sys-body-medium-font: 'Inter', sans-serif;
+  --mat-sys-body-small-font: 'Inter', sans-serif;
+  --mat-sys-label-large-font: 'Inter', sans-serif;
+  --mat-sys-label-medium-font: 'Inter', sans-serif;
+  --mat-sys-label-small-font: 'Inter', sans-serif;
+
+  --mat-sys-corner-extra-small: 4px;
+  --mat-sys-corner-small: 4px;
+  --mat-sys-corner-medium: 6px;
+  --mat-sys-corner-large: 8px;
+
+  --mat-sys-hover-state-layer-opacity: 0.04;
+  --mat-sys-focus-state-layer-opacity: 0.08;
+  --mat-sys-pressed-state-layer-opacity: 0.1;
+  --mat-sys-dragged-state-layer-opacity: 0.1;
+
+  /* UI */
+  --mat-sys-surface-container-low: #ffffff;
+  --mat-sys-corner-full: 10px;
+  --mat-toolbar-standard-height: 64px;
+  --mat-paginator-container-size: 56px;
+  --mat-divider-width: 1px;
+  --mdc-filled-button-container-height: 36px;
+  --mdc-outlined-button-container-height: 36px;
+  --mdc-icon-button-state-layer-size: 36px;
+  --mdc-icon-button-state-layer-size: 36px;
+  --mdc-icon-button-icon-size: 16px;
+  --mdc-list-list-item-one-line-container-height: 36px;
+  --mdc-list-list-item-leading-icon-size: 16px;
+  --mdc-list-list-item-leading-icon-size: 16px;
+  .mat-icon {
+    height: 16px;
+    width: 16px;
+    font-size: 16px;
+  }
+}
