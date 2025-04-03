@@ -77,6 +77,7 @@ html {
   --mdc-list-list-item-one-line-container-height: 36px;
   --mdc-list-list-item-leading-icon-size: 16px;
   --mdc-list-list-item-leading-icon-size: 16px;
+  --mat-text-button-hover-state-layer-opacity: 0.1;
   .mat-icon {
     height: 16px;
     width: 16px;

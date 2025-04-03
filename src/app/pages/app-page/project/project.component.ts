@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-project',
@@ -20,12 +21,25 @@ import { MatCardModule } from '@angular/material/card';
     MatListModule,
     MatCardModule,
     RouterModule,
+    MatIconModule,
+    RouterModule,
   ],
   template: `
     <mat-toolbar>
-      <span>{{ title() }}</span>
+      <div class="flex flex-row items-center gap-2">
+        <button mat-button>
+          <mat-icon class="!m-0">left_panel_close</mat-icon>
+        </button>
+        <span>|</span>
+        <a mat-button [routerLink]="['/', 'projects']">Projects</a>
+        <span>/</span>
+        <button mat-button disabled>{{ title() }}</button>
+      </div>
       <div class="flex-grow"></div>
-      <button mat-flat-button>Add language</button>
+      <button mat-button>
+        <mat-icon>add</mat-icon>
+        New language
+      </button>
     </mat-toolbar>
     <mat-divider></mat-divider>
     <div class="w-full p-10">
@@ -59,7 +73,7 @@ import { MatCardModule } from '@angular/material/card';
 export class ProjectComponent {
   project: ProjectWithLanguages | null = null;
   loading = signal<boolean>(true);
-  title = signal<string>('Project');
+  title = signal<string>('Loading...');
   private supabaseService: SupabaseService = inject(SupabaseService);
   private readonly route = inject(ActivatedRoute);
 
@@ -76,7 +90,7 @@ export class ProjectComponent {
       .subscribe({
         next: project => {
           this.project = project;
-          this.title.set('Project ' + project.name);
+          this.title.set(project.name);
           console.log('Project loaded:', project);
           this.loading.set(false);
         },

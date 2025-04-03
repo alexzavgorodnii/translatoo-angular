@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { LucideAngularModule, Package } from 'lucide-angular';
+import { Folder, LucideAngularModule, LayoutDashboard } from 'lucide-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -40,7 +40,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
                 [activated]="rlaDashboard.isActive"
                 [routerLinkActiveOptions]="{ exact: true }"
               >
-                <mat-icon matListItemIcon>dashboard</mat-icon>
+                <!-- <mat-icon matListItemIcon>dashboard</mat-icon> -->
+                <lucide-icon matListItemIcon [img]="LayoutDashboard" [size]="16"></lucide-icon>
                 <span matListItemTitle>Dashboard</span>
               </a>
               <a
@@ -48,10 +49,11 @@ import { MatToolbarModule } from '@angular/material/toolbar';
                 routerLink="/projects"
                 routerLinkActive="active"
                 #rlaProjects="routerLinkActive"
-                [activated]="rlaProjects.isActive"
+                [activated]="isLinkActive('/projects') || rlaProjects.isActive || isLinkActive('/languages')"
                 [routerLinkActiveOptions]="{ exact: true }"
               >
-                <mat-icon matListItemIcon>folder_copy</mat-icon>
+                <lucide-icon matListItemIcon [img]="Folder" [size]="16"></lucide-icon>
+                <!-- <mat-icon matListItemIcon>folder_copy</mat-icon> -->
                 <span matListItemTitle>Projects</span>
               </a>
             </mat-nav-list>
@@ -84,5 +86,12 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppPageComponent {
-  readonly Package = Package;
+  private router: Router = inject(Router);
+  readonly Folder = Folder;
+  readonly LayoutDashboard = LayoutDashboard;
+
+  isLinkActive(url: string): boolean {
+    const baseUrl = this.router.url;
+    return baseUrl.indexOf(url) !== -1;
+  }
 }

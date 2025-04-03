@@ -28,7 +28,18 @@ import { MatIconModule } from '@angular/material/icon';
   ],
   template: `
     <mat-toolbar>
-      <span>{{ title() }}</span>
+      <div class="flex flex-row items-center gap-2">
+        <button mat-button>
+          <mat-icon class="!m-0">left_panel_close</mat-icon>
+        </button>
+        <span>|</span>
+        <a mat-button [routerLink]="['/', 'projects']">Projects</a>
+        <span>/</span>
+        <a mat-button [routerLink]="['/', 'projects', language?.project_id]">Publicatique</a>
+        <span>/</span>
+        <button mat-button disabled>{{ title() }}</button>
+      </div>
+      <!-- <span>{{ title() }}</span> -->
       <div class="flex-grow"></div>
       @if (!loading()) {
         <div class="flex flex-row gap-2">

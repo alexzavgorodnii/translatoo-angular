@@ -25,9 +25,18 @@ import { RouterModule } from '@angular/router';
   ],
   template: `
     <mat-toolbar>
-      <span>Projects</span>
+      <div class="flex flex-row items-center gap-2">
+        <button mat-button>
+          <mat-icon class="!m-0">left_panel_close</mat-icon>
+        </button>
+        <span>|</span>
+        <span>Projects</span>
+      </div>
       <div class="flex-grow"></div>
-      <button mat-flat-button>Create project</button>
+      <button mat-button>
+        <mat-icon>add</mat-icon>
+        New project
+      </button>
     </mat-toolbar>
     <mat-divider></mat-divider>
     <div class="w-full p-10">
