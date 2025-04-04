@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { Folder, LucideAngularModule, LayoutDashboard } from 'lucide-angular';
+import { Folder, LucideAngularModule, LayoutDashboard, UserCog } from 'lucide-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
@@ -17,7 +16,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     LucideAngularModule,
     MatButtonModule,
     MatDividerModule,
-    MatIconModule,
     MatListModule,
     MatToolbarModule,
   ],
@@ -40,7 +38,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
                 [activated]="rlaDashboard.isActive"
                 [routerLinkActiveOptions]="{ exact: true }"
               >
-                <!-- <mat-icon matListItemIcon>dashboard</mat-icon> -->
                 <lucide-icon matListItemIcon [img]="LayoutDashboard" [size]="16"></lucide-icon>
                 <span matListItemTitle>Dashboard</span>
               </a>
@@ -53,7 +50,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
                 [routerLinkActiveOptions]="{ exact: true }"
               >
                 <lucide-icon matListItemIcon [img]="Folder" [size]="16"></lucide-icon>
-                <!-- <mat-icon matListItemIcon>folder_copy</mat-icon> -->
                 <span matListItemTitle>Projects</span>
               </a>
             </mat-nav-list>
@@ -70,7 +66,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
                 [activated]="rlaProfile.isActive"
                 [routerLinkActiveOptions]="{ exact: true }"
               >
-                <mat-icon matListItemIcon>person</mat-icon>
+                <lucide-icon matListItemIcon [img]="UserCog" [size]="16"></lucide-icon>
                 <span matListItemTitle>Go to profile</span>
               </a>
             </mat-nav-list>
@@ -89,6 +85,7 @@ export class AppPageComponent {
   private router: Router = inject(Router);
   readonly Folder = Folder;
   readonly LayoutDashboard = LayoutDashboard;
+  readonly UserCog = UserCog;
 
   isLinkActive(url: string): boolean {
     const baseUrl = this.router.url;

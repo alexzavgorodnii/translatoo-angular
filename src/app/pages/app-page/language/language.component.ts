@@ -11,7 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { Translation } from '../../../../models/translations';
-import { MatIconModule } from '@angular/material/icon';
+import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
 
 @Component({
   selector: 'app-language',
@@ -24,13 +24,13 @@ import { MatIconModule } from '@angular/material/icon';
     RouterModule,
     MatTableModule,
     MatPaginatorModule,
-    MatIconModule,
+    LucideAngularModule,
   ],
   template: `
     <mat-toolbar>
       <div class="flex flex-row items-center gap-2">
         <button mat-button>
-          <mat-icon class="!m-0">left_panel_close</mat-icon>
+          <lucide-icon [img]="PanelLeft" [size]="16"></lucide-icon>
         </button>
         <span>|</span>
         <a mat-button [routerLink]="['/', 'projects']">Projects</a>
@@ -44,16 +44,22 @@ import { MatIconModule } from '@angular/material/icon';
       @if (!loading()) {
         <div class="flex flex-row gap-2">
           <button mat-button>
-            <mat-icon>upload_file</mat-icon>
-            Import
+            <span class="inline-flex flex-row items-center gap-1">
+              <lucide-icon [img]="FileDown" [size]="16"></lucide-icon>
+              Import
+            </span>
           </button>
           <button mat-button>
-            <mat-icon>download</mat-icon>
-            Export
+            <span class="inline-flex flex-row items-center gap-1">
+              <lucide-icon [img]="FileUp" [size]="16"></lucide-icon>
+              Export
+            </span>
           </button>
           <button mat-button>
-            <mat-icon>copy_all</mat-icon>
-            Copy to Clipboard
+            <span class="inline-flex flex-row items-center gap-1">
+              <lucide-icon [img]="Copy" [size]="16"></lucide-icon>
+              Copy to Clipboard
+            </span>
           </button>
         </div>
       }
@@ -71,7 +77,7 @@ import { MatIconModule } from '@angular/material/icon';
             'relative min-h-[200px] overflow-auto'
           "
         >
-          <table mat-table [dataSource]="dataSource" class="example-table">
+          <table mat-table [dataSource]="dataSource">
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
               <td mat-cell *matCellDef="let row">{{ row.key }}</td>
@@ -86,7 +92,7 @@ import { MatIconModule } from '@angular/material/icon';
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let row">
                 <button mat-icon-button>
-                  <mat-icon>edit_square</mat-icon>
+                  <lucide-icon [img]="FilePenLine" [size]="16"></lucide-icon>
                 </button>
               </td>
             </ng-container>
@@ -109,6 +115,12 @@ import { MatIconModule } from '@angular/material/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LanguageComponent implements AfterViewInit {
+  readonly PanelLeft = PanelLeft;
+  readonly Plus = Plus;
+  readonly FileDown = FileDown;
+  readonly FileUp = FileUp;
+  readonly Copy = Copy;
+  readonly FilePenLine = FilePenLine;
   language: LanguageWithTranslations | null = null;
   loading = signal<boolean>(false);
   title = signal<string>('Language');

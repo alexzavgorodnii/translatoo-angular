@@ -115,4 +115,22 @@ export class SupabaseService {
         });
     });
   }
+
+  addProject(name: string): Observable<Project> {
+    return new Observable(observer => {
+      this.supabase
+        .from('project')
+        .insert({ name })
+        .select()
+        .single()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as Project);
+            observer.complete();
+          }
+        });
+    });
+  }
 }

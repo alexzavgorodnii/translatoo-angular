@@ -1,4 +1,13 @@
 :host {
   display: flex;
   flex-direction: column;
+  .mat-mdc-header-cell {
+    font-weight: bold;
+  }
+  .mat-column-key {
+    width: 300px;
+  }
+  .mat-column-controls {
+    width: 40px;
+  }
 }

@@ -9,7 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
+import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
 
 @Component({
   selector: 'app-project',
@@ -21,14 +21,14 @@ import { MatIconModule } from '@angular/material/icon';
     MatListModule,
     MatCardModule,
     RouterModule,
-    MatIconModule,
+    LucideAngularModule,
     RouterModule,
   ],
   template: `
     <mat-toolbar>
       <div class="flex flex-row items-center gap-2">
         <button mat-button>
-          <mat-icon class="!m-0">left_panel_close</mat-icon>
+          <lucide-icon [img]="PanelLeft" [size]="16"></lucide-icon>
         </button>
         <span>|</span>
         <a mat-button [routerLink]="['/', 'projects']">Projects</a>
@@ -37,8 +37,10 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
       <div class="flex-grow"></div>
       <button mat-button>
-        <mat-icon>add</mat-icon>
-        New language
+        <span class="inline-flex flex-row items-center gap-1">
+          <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
+          New language
+        </span>
       </button>
     </mat-toolbar>
     <mat-divider></mat-divider>
@@ -53,7 +55,15 @@ import { MatIconModule } from '@angular/material/icon';
                 <mat-list-item>
                   <div matListItemTitle>{{ language.name }}</div>
                   @if (language.format) {
-                    <div matListItemLine>{{ language.format }} format</div>
+                    <div matListItemLine class="pt-2">
+                      <span
+                        [class]="
+                          'inline-flex flex-row items-center rounded-[var(--mat-sys-corner-extra-small)] ' +
+                          'bg-[var(--mat-sys-primary)] px-2.5 py-0.5'
+                        "
+                        >{{ language.format }}</span
+                      >
+                    </div>
                   }
                   <div class="flex-grow"></div>
                   <div matListItemMeta>
@@ -74,6 +84,8 @@ export class ProjectComponent {
   project: ProjectWithLanguages | null = null;
   loading = signal<boolean>(true);
   title = signal<string>('Loading...');
+  readonly PanelLeft = PanelLeft;
+  readonly Plus = Plus;
   private supabaseService: SupabaseService = inject(SupabaseService);
   private readonly route = inject(ActivatedRoute);
 

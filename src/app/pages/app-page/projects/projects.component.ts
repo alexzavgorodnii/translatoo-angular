@@ -3,13 +3,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { SupabaseService } from '../../../../services/supabase.service';
 import { Project } from '../../../../models/projects';
 import { RouterModule } from '@angular/router';
+import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
+import { MatDialog } from '@angular/material/dialog';
+import { NewProjectComponent } from './new-project/new-project.component';
 
 @Component({
   selector: 'app-projects',
@@ -17,25 +19,27 @@ import { RouterModule } from '@angular/router';
     MatToolbarModule,
     MatDividerModule,
     MatListModule,
-    MatIconModule,
     MatCardModule,
     MatButtonModule,
     MatProgressBarModule,
     RouterModule,
+    LucideAngularModule,
   ],
   template: `
     <mat-toolbar>
       <div class="flex flex-row items-center gap-2">
         <button mat-button>
-          <mat-icon class="!m-0">left_panel_close</mat-icon>
+          <lucide-icon [img]="PanelLeft" [size]="16"></lucide-icon>
         </button>
         <span>|</span>
         <span>Projects</span>
       </div>
       <div class="flex-grow"></div>
-      <button mat-button>
-        <mat-icon>add</mat-icon>
-        New project
+      <button mat-button (click)="openNewProjectDialog()">
+        <span class="inline-flex flex-row items-center gap-1">
+          <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
+          New project
+        </span>
       </button>
     </mat-toolbar>
     <mat-divider></mat-divider>
@@ -44,7 +48,7 @@ import { RouterModule } from '@angular/router';
         <mat-progress-bar mode="query"></mat-progress-bar>
       } @else {
         <mat-list>
-          @for (project of projects; track project.id) {
+          @for (project of projects(); track project.id) {
             <mat-card appearance="raised">
               <mat-card-content>
                 <mat-list-item>
@@ -65,8 +69,11 @@ import { RouterModule } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsComponent {
-  projects: Project[] = [];
+  projects = signal<Project[]>([]);
   loading = signal<boolean>(true);
+  readonly PanelLeft = PanelLeft;
+  readonly Plus = Plus;
+  readonly dialog = inject(MatDialog);
   private supabaseService: SupabaseService = inject(SupabaseService);
 
   constructor() {
@@ -75,7 +82,7 @@ export class ProjectsComponent {
       .pipe(takeUntilDestroyed())
       .subscribe({
         next: projects => {
-          this.projects = projects;
+          this.projects.set(projects);
           this.loading.set(false);
         },
         error: error => {
@@ -83,5 +90,18 @@ export class ProjectsComponent {
           this.loading.set(false);
         },
       });
+  }
+
+  openNewProjectDialog(): void {
+    const dialogRef = this.dialog.open(NewProjectComponent, {
+      width: '400px',
+      data: {},
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.projects.update(projects => [...projects, result]);
+      }
+    });
   }
 }
