@@ -10,4 +10,5 @@ export type Language = {
 
 export type LanguageWithTranslations = Language & {
   translations: Translation[];
+  progress?: number;
 };

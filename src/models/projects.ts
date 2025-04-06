@@ -1,4 +1,4 @@
-import { Language } from './languages';
+import { LanguageWithTranslations } from './languages';
 
 export interface Project {
   id: string;
@@ -7,5 +7,5 @@ export interface Project {
 }
 
 export type ProjectWithLanguages = Project & {
-  languages: Language[];
+  languages: LanguageWithTranslations[];
 };

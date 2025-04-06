@@ -10,6 +10,8 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
+import { MatDialog } from '@angular/material/dialog';
+import { NewLanguageComponent } from './new-language/new-language.component';
 
 @Component({
   selector: 'app-project',
@@ -36,7 +38,7 @@ import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
         <button mat-button disabled>{{ title() }}</button>
       </div>
       <div class="flex-grow"></div>
-      <button mat-button>
+      <button mat-button (click)="openNewLanguageDialog()">
         <span class="inline-flex flex-row items-center gap-1">
           <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
           New language
@@ -49,22 +51,17 @@ import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
         <mat-progress-bar mode="query"></mat-progress-bar>
       } @else {
         <mat-list>
-          @for (language of project?.languages; track language.id) {
+          @for (language of project().languages; track language.id) {
             <mat-card appearance="raised">
               <mat-card-content>
                 <mat-list-item>
-                  <div matListItemTitle>{{ language.name }}</div>
-                  @if (language.format) {
-                    <div matListItemLine class="pt-2">
-                      <span
-                        [class]="
-                          'inline-flex flex-row items-center rounded-[var(--mat-sys-corner-extra-small)] ' +
-                          'bg-[var(--mat-sys-primary)] px-2.5 py-0.5'
-                        "
-                        >{{ language.format }}</span
-                      >
-                    </div>
-                  }
+                  <div matListItemTitle>
+                    <b>{{ language.name }}</b>
+                  </div>
+                  <div matListItemLine>
+                    <span>Language progress: {{ language.progress }}%</span>
+                    <mat-progress-bar mode="determinate" [value]="language.progress"></mat-progress-bar>
+                  </div>
                   <div class="flex-grow"></div>
                   <div matListItemMeta>
                     <a [routerLink]="['/', 'languages', language.id]" mat-stroked-button>Open</a>
@@ -81,9 +78,15 @@ import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectComponent {
-  project: ProjectWithLanguages | null = null;
+  project = signal<ProjectWithLanguages>({
+    id: '',
+    created_at: '',
+    name: '',
+    languages: [],
+  });
   loading = signal<boolean>(true);
   title = signal<string>('Loading...');
+  readonly dialog = inject(MatDialog);
   readonly PanelLeft = PanelLeft;
   readonly Plus = Plus;
   private supabaseService: SupabaseService = inject(SupabaseService);
@@ -101,9 +104,16 @@ export class ProjectComponent {
       .pipe(takeUntilDestroyed())
       .subscribe({
         next: project => {
-          this.project = project;
+          // Calculate progress for each language
+          project.languages.forEach(language => {
+            const totalTranslations = language.translations.length;
+            const translatedCount = language.translations.filter(
+              translation => translation.value && translation.value.length !== 0,
+            ).length;
+            language.progress = totalTranslations > 0 ? (translatedCount / totalTranslations) * 100 : 0;
+          });
+          this.project.set(project);
           this.title.set(project.name);
-          console.log('Project loaded:', project);
           this.loading.set(false);
         },
         error: error => {
@@ -111,5 +121,28 @@ export class ProjectComponent {
           this.loading.set(false);
         },
       });
+  }
+
+  openNewLanguageDialog(): void {
+    const dialogRef = this.dialog.open(NewLanguageComponent, {
+      width: '400px',
+      data: {
+        project: this.project(),
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        result.progress = 0; // Initialize progress to 0
+        // Update the project with the new language
+        this.project.update(project => {
+          const updatedLanguages = [...project.languages, result];
+          return {
+            ...project,
+            languages: updatedLanguages,
+          };
+        });
+      }
+    });
   }
 }

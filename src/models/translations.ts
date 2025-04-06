@@ -12,5 +12,7 @@ export type TranslationFromFile = {
 export type Translation = TranslationFromFile & {
   id?: number;
   context?: string;
+  temp_value?: string;
+  language_id: string;
   created_at: string;
 };

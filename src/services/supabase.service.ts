@@ -3,7 +3,8 @@ import { createClient, OAuthResponse, SupabaseClient, User } from '@supabase/sup
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs/internal/Observable';
 import { Project, ProjectWithLanguages } from '../models/projects';
-import { LanguageWithTranslations } from '../models/languages';
+import { Language, LanguageWithTranslations } from '../models/languages';
+import { Translation } from '../models/translations';
 
 @Injectable({
   providedIn: 'root',
@@ -83,7 +84,7 @@ export class SupabaseService {
     return new Observable(observer => {
       this.supabase
         .from('project')
-        .select('*, languages:language(*)')
+        .select('*, languages:language(*, translations:translation(*))')
         .match({ id })
         .single()
         .then(response => {
@@ -128,6 +129,41 @@ export class SupabaseService {
             observer.error(response.error);
           } else {
             observer.next(response.data as Project);
+            observer.complete();
+          }
+        });
+    });
+  }
+
+  addLanguage(name: string, project_id: string): Observable<Language> {
+    return new Observable(observer => {
+      this.supabase
+        .from('language')
+        .insert({ name, project_id })
+        .select()
+        .single()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as Language);
+            observer.complete();
+          }
+        });
+    });
+  }
+
+  addTranslations(translate: Translation[]): Observable<Translation[]> {
+    return new Observable(observer => {
+      this.supabase
+        .from('translation')
+        .insert(translate)
+        .select()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as Translation[]);
             observer.complete();
           }
         });

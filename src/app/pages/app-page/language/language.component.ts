@@ -85,7 +85,13 @@ import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Pl
 
             <ng-container matColumnDef="value">
               <th mat-header-cell *matHeaderCellDef>Value</th>
-              <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+              <td mat-cell *matCellDef="let row">
+                @if (row.temp_value) {
+                  <span class="font-bold text-gray-200">{{ row.temp_value }}</span>
+                } @else {
+                  {{ row.value }}
+                }
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="controls">

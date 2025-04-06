@@ -5,7 +5,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogRef } from '@angular/material/dialog';
 import { SupabaseService } from '../../../../../services/supabase.service';
-import { take } from 'rxjs/internal/operators/take';
 
 @Component({
   selector: 'app-new-project',
@@ -46,17 +45,16 @@ export class NewProjectComponent {
   }
 
   onAddClick(): void {
-    this.supabaseService
-      .addProject(this.name())
-      .pipe(take(1))
-      .subscribe({
-        next: project => {
-          this.project.set(project);
-          this.dialogRef.close(this.project());
-        },
-        error: error => {
-          console.error('Error adding project:', error);
-        },
-      });
+    const req = this.supabaseService.addProject(this.name()).subscribe({
+      next: project => {
+        this.project.set(project);
+        this.dialogRef.close(this.project());
+        req.unsubscribe();
+      },
+      error: error => {
+        console.error('Error adding project:', error);
+        req.unsubscribe();
+      },
+    });
   }
 }
