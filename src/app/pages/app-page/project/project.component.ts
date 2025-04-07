@@ -12,6 +12,7 @@ import { MatCardModule } from '@angular/material/card';
 import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
 import { MatDialog } from '@angular/material/dialog';
 import { NewLanguageComponent } from './new-language/new-language.component';
+import { StateService } from '../../../store/state.service';
 
 @Component({
   selector: 'app-project',
@@ -24,7 +25,6 @@ import { NewLanguageComponent } from './new-language/new-language.component';
     MatCardModule,
     RouterModule,
     LucideAngularModule,
-    RouterModule,
   ],
   template: `
     <mat-toolbar>
@@ -38,7 +38,7 @@ import { NewLanguageComponent } from './new-language/new-language.component';
         <button mat-button disabled>{{ title() }}</button>
       </div>
       <div class="flex-grow"></div>
-      <button mat-button (click)="openNewLanguageDialog()">
+      <button mat-button [routerLink]="['/', 'projects', project().id, 'new-language']">
         <span class="inline-flex flex-row items-center gap-1">
           <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
           New language
@@ -90,6 +90,7 @@ export class ProjectComponent {
   readonly PanelLeft = PanelLeft;
   readonly Plus = Plus;
   private supabaseService: SupabaseService = inject(SupabaseService);
+  private stateService: StateService = inject(StateService);
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
@@ -113,6 +114,7 @@ export class ProjectComponent {
             language.progress = totalTranslations > 0 ? (translatedCount / totalTranslations) * 100 : 0;
           });
           this.project.set(project);
+          this.stateService.project = project; // Update the state service with the current project
           this.title.set(project.name);
           this.loading.set(false);
         },

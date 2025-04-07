@@ -28,6 +28,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/app-page/project/project.component').then(m => m.ProjectComponent),
       },
       {
+        title: 'New Language | Translatoo',
+        path: 'projects/:id/new-language',
+        loadComponent: () =>
+          import('./pages/app-page/project/new-language/new-language.component').then(m => m.NewLanguageComponent),
+      },
+      {
         title: 'Language | Translatoo',
         path: 'languages/:id',
         loadComponent: () => import('./pages/app-page/language/language.component').then(m => m.LanguageComponent),

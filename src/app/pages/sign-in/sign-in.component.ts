@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostBinding } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
 import { SupabaseService } from '../../../services/supabase.service';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -26,11 +26,10 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class SignInComponent {
   @HostBinding('class') class = 'flex w-full h-screen items-center justify-center bg-gray-100 dark:bg-gray-900';
+  private readonly supabaseService: SupabaseService = inject(SupabaseService);
+  private readonly router: Router = inject(Router);
 
-  constructor(
-    private readonly supabaseService: SupabaseService,
-    private readonly router: Router,
-  ) {
+  constructor() {
     this.supabaseService.isAuth().subscribe({
       next: isAuth => {
         if (isAuth) {

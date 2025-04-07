@@ -46,7 +46,12 @@ import { MatToolbarModule } from '@angular/material/toolbar';
                 routerLink="/projects"
                 routerLinkActive="active"
                 #rlaProjects="routerLinkActive"
-                [activated]="isLinkActive('/projects') || rlaProjects.isActive || isLinkActive('/languages')"
+                [activated]="
+                  isLinkActive('/projects') ||
+                  rlaProjects.isActive ||
+                  isLinkActive('/languages') ||
+                  isLinkActive('/new-language')
+                "
                 [routerLinkActiveOptions]="{ exact: true }"
               >
                 <lucide-icon matListItemIcon [img]="Folder" [size]="16"></lucide-icon>

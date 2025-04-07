@@ -79,9 +79,14 @@ html {
   --mdc-list-list-item-leading-icon-size: 16px;
   --mdc-list-list-item-leading-icon-size: 16px;
   --mat-text-button-hover-state-layer-opacity: 0.1;
-  .mat-icon {
-    height: 16px;
-    width: 16px;
-    font-size: 16px;
-  }
+
+  --mat-card-title-text-line-height: 1.75rem;
+  --mat-card-title-text-size: 1.375rem;
+  --mat-card-title-text-tracking: 0;
+  --mat-card-title-text-weight: 400;
+
+  --mat-card-subtitle-text-line-height: 1.5rem;
+  --mat-card-subtitle-text-size: 1rem;
+  --mat-card-subtitle-text-tracking: 0.009rem;
+  --mat-card-subtitle-text-weight: 500;
 }
