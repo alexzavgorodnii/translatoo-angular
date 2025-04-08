@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { Folder, LucideAngularModule, LayoutDashboard, UserCog } from 'lucide-angular';
+import { Folder, LucideAngularModule, LayoutDashboard, UserCog, Users } from 'lucide-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
@@ -29,20 +29,24 @@ import { MatToolbarModule } from '@angular/material/toolbar';
             </mat-toolbar>
             <mat-divider></mat-divider>
             <mat-nav-list class="!p-3">
+              @if (false) {
+                <a
+                  mat-list-item
+                  class="mb-2"
+                  routerLink="/dashboard"
+                  routerLinkActive="active"
+                  #rlaDashboard="routerLinkActive"
+                  [activated]="rlaDashboard.isActive"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                >
+                  <lucide-icon matListItemIcon [img]="LayoutDashboard" [size]="16"></lucide-icon>
+                  <span matListItemTitle>Dashboard</span>
+                </a>
+              }
+
               <a
                 mat-list-item
-                class="m-b-2"
-                routerLink="/dashboard"
-                routerLinkActive="active"
-                #rlaDashboard="routerLinkActive"
-                [activated]="rlaDashboard.isActive"
-                [routerLinkActiveOptions]="{ exact: true }"
-              >
-                <lucide-icon matListItemIcon [img]="LayoutDashboard" [size]="16"></lucide-icon>
-                <span matListItemTitle>Dashboard</span>
-              </a>
-              <a
-                mat-list-item
+                class="mb-2"
                 routerLink="/projects"
                 routerLinkActive="active"
                 #rlaProjects="routerLinkActive"
@@ -56,6 +60,17 @@ import { MatToolbarModule } from '@angular/material/toolbar';
               >
                 <lucide-icon matListItemIcon [img]="Folder" [size]="16"></lucide-icon>
                 <span matListItemTitle>Projects</span>
+              </a>
+              <a
+                mat-list-item
+                routerLink="/collaborators"
+                routerLinkActive="active"
+                #rlaCollaborators="routerLinkActive"
+                [activated]="rlaCollaborators.isActive"
+                [routerLinkActiveOptions]="{ exact: true }"
+              >
+                <lucide-icon matListItemIcon [img]="Users" [size]="16"></lucide-icon>
+                <span matListItemTitle>Collaborators</span>
               </a>
             </mat-nav-list>
           </div>
@@ -91,6 +106,7 @@ export class AppPageComponent {
   readonly Folder = Folder;
   readonly LayoutDashboard = LayoutDashboard;
   readonly UserCog = UserCog;
+  readonly Users = Users;
 
   isLinkActive(url: string): boolean {
     const baseUrl = this.router.url;

@@ -38,6 +38,12 @@ export const routes: Routes = [
         path: 'languages/:id',
         loadComponent: () => import('./pages/app-page/language/language.component').then(m => m.LanguageComponent),
       },
+      {
+        title: 'Collaborators | Translatoo',
+        path: 'collaborators',
+        loadComponent: () =>
+          import('./pages/app-page/collaborators/collaborators.component').then(m => m.CollaboratorsComponent),
+      },
     ],
   },
   {

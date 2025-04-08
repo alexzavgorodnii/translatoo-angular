@@ -96,6 +96,7 @@
             }
           },
           "options": {
+            "host": "0.0.0.0",
             "sslKey": "cert/localhost-key.pem",
             "sslCert": "cert/localhost.pem",
             "ssl": true,
