@@ -11,7 +11,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { Translation } from '../../../../models/translations';
-import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
+import {
+  Check,
+  ChevronDown,
+  CloudDownload,
+  CloudUpload,
+  Copy,
+  FilePenLine,
+  LucideAngularModule,
+  PanelLeft,
+  Plus,
+} from 'lucide-angular';
+import { generateI18Next, generateKeyValueJSON } from '../../../../utils/exporters/translation-exporters';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-language',
@@ -25,6 +38,7 @@ import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Pl
     MatTableModule,
     MatPaginatorModule,
     LucideAngularModule,
+    MatMenuModule,
   ],
   template: `
     <mat-toolbar>
@@ -39,28 +53,39 @@ import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Pl
         <span>/</span>
         <button mat-button disabled>{{ title() }}</button>
       </div>
-      <!-- <span>{{ title() }}</span> -->
       <div class="flex-grow"></div>
       @if (!loading()) {
         <div class="flex flex-row gap-2">
-          <button mat-button>
+          <a mat-button [routerLink]="['/', 'languages', language?.id, 'import']">
             <span class="inline-flex flex-row items-center gap-1">
-              <lucide-icon [img]="FileDown" [size]="16"></lucide-icon>
+              <lucide-icon [img]="CloudUpload" [size]="16"></lucide-icon>
               Import
             </span>
-          </button>
+          </a>
           <button mat-button>
             <span class="inline-flex flex-row items-center gap-1">
-              <lucide-icon [img]="FileUp" [size]="16"></lucide-icon>
+              <lucide-icon [img]="CloudDownload" [size]="16"></lucide-icon>
               Export
             </span>
           </button>
           <button mat-button>
-            <span class="inline-flex flex-row items-center gap-1">
-              <lucide-icon [img]="Copy" [size]="16"></lucide-icon>
-              Copy to Clipboard
+            <span class="inline-flex flex-row items-center gap-1" [matMenuTriggerFor]="menu">
+              @if (copied()) {
+                <lucide-icon [img]="Check" [size]="16"></lucide-icon>
+                Copied
+              } @else {
+                <!-- <lucide-icon [img]="Copy" [size]="16"></lucide-icon> -->
+                Copy to Clipboard
+              }
+              <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
             </span>
           </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="handleCopyToClipboard('json')">JSON</button>
+            <button mat-menu-item (click)="handleCopyToClipboard('keyvalue-json')">Key Value JSON</button>
+            <button mat-menu-item (click)="handleCopyToClipboard('arb')">Arb</button>
+            <button mat-menu-item (click)="handleCopyToClipboard('i18next-json')">i18next JSON</button>
+          </mat-menu>
         </div>
       }
     </mat-toolbar>
@@ -77,7 +102,7 @@ import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Pl
             'relative min-h-[200px] overflow-auto'
           "
         >
-          <table mat-table [dataSource]="dataSource">
+          <table mat-table [dataSource]="translations">
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
               <td mat-cell *matCellDef="let row">{{ row.key }}</td>
@@ -109,7 +134,7 @@ import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Pl
         </div>
 
         <mat-paginator
-          [length]="dataSource.data.length"
+          [length]="translations.data.length"
           [pageSize]="20"
           [showFirstLastButtons]="true"
           aria-label="Select page of GitHub search results"
@@ -123,18 +148,22 @@ import { Copy, FileDown, FilePenLine, FileUp, LucideAngularModule, PanelLeft, Pl
 export class LanguageComponent implements AfterViewInit {
   readonly PanelLeft = PanelLeft;
   readonly Plus = Plus;
-  readonly FileDown = FileDown;
-  readonly FileUp = FileUp;
+  readonly CloudUpload = CloudUpload;
+  readonly CloudDownload = CloudDownload;
   readonly Copy = Copy;
   readonly FilePenLine = FilePenLine;
+  readonly Check = Check;
+  readonly ChevronDown = ChevronDown;
+  private _snackBar = inject(MatSnackBar);
   language: LanguageWithTranslations | null = null;
   loading = signal<boolean>(false);
   title = signal<string>('Language');
   displayedColumns: string[] = ['key', 'value', 'controls'];
-  dataSource = new MatTableDataSource<Translation>([]);
+  translations = new MatTableDataSource<Translation>([]);
+  copied = signal<boolean>(false);
   @ViewChild(MatPaginator) paginator?: MatPaginator;
 
-  private supabaseService: SupabaseService = inject(SupabaseService);
+  private readonly supabaseService: SupabaseService = inject(SupabaseService);
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
@@ -150,8 +179,8 @@ export class LanguageComponent implements AfterViewInit {
       .subscribe({
         next: language => {
           this.language = language;
-          this.dataSource.data = language.translations;
-          this.title.set('Language ' + language.name);
+          this.translations.data = language.translations;
+          this.title.set(language.name);
           this.loading.set(false);
         },
         error: error => {
@@ -163,7 +192,43 @@ export class LanguageComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     if (this.paginator) {
-      this.dataSource.paginator = this.paginator;
+      this.translations.paginator = this.paginator;
+    }
+  }
+
+  async handleCopyToClipboard(format: string) {
+    if (!this.language || !this.translations.data.length) return;
+
+    try {
+      // Format translations based on language format (JSON is default)
+      let formattedContent = '';
+      switch (format) {
+        case 'json':
+        case 'keyvalue-json':
+        case 'arb':
+          formattedContent = generateKeyValueJSON(this.translations.data);
+          break;
+        case 'i18next-json':
+          formattedContent = generateI18Next(this.translations.data);
+          break;
+      }
+
+      await navigator.clipboard.writeText(formattedContent);
+
+      this.copied.set(true);
+      this._snackBar.open(`Translations copied in ${format.toUpperCase()} format`, 'Close', {
+        duration: 1000,
+      });
+
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        this.copied.set(false);
+      }, 2000);
+    } catch (error) {
+      this._snackBar.open('Something went wrong when copying to clipboard', 'Close', {
+        duration: 1000,
+      });
+      console.error('Failed to copy: ', error);
     }
   }
 }

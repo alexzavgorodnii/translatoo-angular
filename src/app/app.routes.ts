@@ -39,6 +39,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/app-page/language/language.component').then(m => m.LanguageComponent),
       },
       {
+        title: 'Import Language Keys | Translatoo',
+        path: 'languages/:id/import',
+        loadComponent: () =>
+          import('./pages/app-page/language/import-language/import-language.component').then(
+            m => m.ImportLanguageComponent,
+          ),
+      },
+      {
         title: 'Collaborators | Translatoo',
         path: 'collaborators',
         loadComponent: () =>

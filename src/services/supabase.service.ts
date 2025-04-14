@@ -98,6 +98,24 @@ export class SupabaseService {
     });
   }
 
+  getOnlyProject(id: string): Observable<Project> {
+    return new Observable(observer => {
+      this.supabase
+        .from('project')
+        .select('*')
+        .match({ id })
+        .single()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as Project);
+            observer.complete();
+          }
+        });
+    });
+  }
+
   getLanguage(id: string): Observable<LanguageWithTranslations> {
     return new Observable(observer => {
       this.supabase

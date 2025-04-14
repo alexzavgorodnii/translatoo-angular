@@ -1,5 +1,5 @@
-import { LanguageWithTranslations } from '@/models/Language';
-import { Translation } from '@/models/Translation';
+import { LanguageWithTranslations } from '../../models/languages';
+import { Translation } from '../../models/translations';
 
 // XLIFF format (version 1.2)
 export const generateXLIFF = (translations: Translation[], language: LanguageWithTranslations): string => {
