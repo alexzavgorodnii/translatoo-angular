@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, model, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, model, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -19,10 +19,9 @@ import { take } from 'rxjs/internal/operators/take';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { TranslationFromFile } from '../../../../../models/translations';
-import { NgTemplateOutlet } from '@angular/common';
+import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-table.component';
 
 @Component({
   selector: 'app-import-language',
@@ -42,8 +41,7 @@ import { NgTemplateOutlet } from '@angular/common';
     MatRadioModule,
     MatTabsModule,
     MatTableModule,
-    MatPaginatorModule,
-    NgTemplateOutlet,
+    ImportedKeysTableComponent,
   ],
   template: `
     <mat-toolbar>
@@ -134,7 +132,8 @@ import { NgTemplateOutlet } from '@angular/common';
                         </span>
                       </div>
                     </ng-template>
-                    <ng-container *ngTemplateOutlet="newKeys"></ng-container>
+                    <p class="mt-4 mb-4 font-bold">These keys will be added to your language.</p>
+                    <app-imported-keys-table [translations]="newTranslations"></app-imported-keys-table>
                   </mat-tab>
 
                   <mat-tab>
@@ -147,7 +146,8 @@ import { NgTemplateOutlet } from '@angular/common';
                         </span>
                       </div>
                     </ng-template>
-                    <ng-container *ngTemplateOutlet="updateKeys"></ng-container>
+                    <p class="mt-4 mb-4 font-bold">Choose which translations to update with new values.</p>
+                    <app-imported-keys-table [translations]="updateTranslations"></app-imported-keys-table>
                   </mat-tab>
 
                   <mat-tab>
@@ -160,7 +160,11 @@ import { NgTemplateOutlet } from '@angular/common';
                         </span>
                       </div>
                     </ng-template>
-                    <ng-container *ngTemplateOutlet="missingKeys"></ng-container>
+                    <p class="mt-4 mb-4 font-bold">
+                      These keys exist in your language but not in the imported file. Select keys to delete (unselected
+                      keys will be kept).
+                    </p>
+                    <app-imported-keys-table [translations]="missingTranslations"></app-imported-keys-table>
                   </mat-tab>
                 </mat-tab-group>
               }
@@ -179,117 +183,6 @@ import { NgTemplateOutlet } from '@angular/common';
         </mat-card>
       }
     </div>
-    <ng-template #newKeys>
-      <div
-        [class]="
-          'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
-          'relative min-h-[200px] overflow-auto'
-        "
-      >
-        <table mat-table [dataSource]="newTranslations">
-          <ng-container matColumnDef="key">
-            <th mat-header-cell *matHeaderCellDef>Key</th>
-            <td mat-cell *matCellDef="let row">{{ row.key }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="value">
-            <th mat-header-cell *matHeaderCellDef>Value</th>
-            <td mat-cell *matCellDef="let row">
-              @if (row.temp_value) {
-                <span class="font-bold text-gray-200">{{ row.temp_value }}</span>
-              } @else {
-                {{ row.value }}
-              }
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      <mat-paginator
-        #newPaginator
-        [length]="newTranslations.data.length"
-        [pageSize]="20"
-        [showFirstLastButtons]="true"
-        aria-label="Select page of GitHub search results"
-      ></mat-paginator>
-    </ng-template>
-    <ng-template #updateKeys>
-      <div
-        [class]="
-          'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
-          'relative min-h-[200px] overflow-auto'
-        "
-      >
-        <table mat-table [dataSource]="updateTranslations">
-          <ng-container matColumnDef="key">
-            <th mat-header-cell *matHeaderCellDef>Key</th>
-            <td mat-cell *matCellDef="let row">{{ row.key }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="value">
-            <th mat-header-cell *matHeaderCellDef>Value</th>
-            <td mat-cell *matCellDef="let row">
-              @if (row.temp_value) {
-                <span class="font-bold text-gray-200">{{ row.temp_value }}</span>
-              } @else {
-                {{ row.value }}
-              }
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      <mat-paginator
-        #updatePaginator
-        [length]="updateTranslations.data.length"
-        [pageSize]="20"
-        [showFirstLastButtons]="true"
-        aria-label="Select page of GitHub search results"
-      ></mat-paginator>
-    </ng-template>
-    <ng-template #missingKeys>
-      <div
-        [class]="
-          'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
-          'relative min-h-[200px] overflow-auto'
-        "
-      >
-        <table mat-table [dataSource]="missingTranslations">
-          <ng-container matColumnDef="key">
-            <th mat-header-cell *matHeaderCellDef>Key</th>
-            <td mat-cell *matCellDef="let row">{{ row.key }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="value">
-            <th mat-header-cell *matHeaderCellDef>Value</th>
-            <td mat-cell *matCellDef="let row">
-              @if (row.temp_value) {
-                <span class="font-bold text-gray-200">{{ row.temp_value }}</span>
-              } @else {
-                {{ row.value }}
-              }
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      <mat-paginator
-        #missingPaginator
-        [length]="missingTranslations.data.length"
-        [pageSize]="20"
-        [showFirstLastButtons]="true"
-        aria-label="Select page of GitHub search results"
-      ></mat-paginator>
-    </ng-template>
   `,
   styleUrl: './import-language.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -320,15 +213,11 @@ export class ImportLanguageComponent {
   error = signal<boolean>(false);
   fileProcessed = signal<boolean>(true);
   selectedFile: File | null = null;
-  displayedColumns: string[] = ['key', 'value'];
   newTranslations = new MatTableDataSource<TranslationFromFile>([]);
   updateTranslations = new MatTableDataSource<TranslationFromFile>([]);
   missingTranslations = new MatTableDataSource<TranslationFromFile>([]);
   readonly showJsonFormatSelector = signal<boolean>(false);
   readonly selectedJsonFormat = model('keyvalue-json');
-  @ViewChild('newPaginator') newPaginator?: MatPaginator;
-  @ViewChild('updatePaginator') updatePaginator?: MatPaginator;
-  @ViewChild('missingPaginator') missingPaginator?: MatPaginator;
 
   private readonly stateService: StateService = inject(StateService);
   private readonly supabaseService: SupabaseService = inject(SupabaseService);
