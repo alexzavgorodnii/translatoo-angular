@@ -89,4 +89,11 @@ html {
   --mat-card-subtitle-text-size: 1rem;
   --mat-card-subtitle-text-tracking: 0.009rem;
   --mat-card-subtitle-text-weight: 500;
+
+  --mat-toolbar-container-background-color: var(
+    --mdc-elevated-card-container-color,
+    var(--mat-sys-surface-container-low)
+  );
+  --mat-sidenav-container-width: 250px;
+  --mat-divider-color: var(--mat-sys-primary-container);
 }

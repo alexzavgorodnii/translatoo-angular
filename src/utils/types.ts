@@ -1,5 +1,5 @@
 import { LanguageWithTranslations } from '../models/languages';
-import { TranslationFromFile } from '../models/translations';
+import { MissingTranslationFromFile, TranslationFromFile, UpdatedTranslationFromFile } from '../models/translations';
 
 export interface ImportClientWrapperProps {
   initialLanguage: LanguageWithTranslations;
@@ -8,27 +8,8 @@ export interface ImportClientWrapperProps {
 // Define types for the different translation categories
 export interface ComparisonResult {
   newTranslations: TranslationFromFile[];
-  updatedTranslations: {
-    key: string;
-    oldValue: string;
-    newValue: string;
-    context?: string;
-    order: number;
-    selected: boolean;
-    is_plural: boolean;
-    plural_key?: string;
-    comment?: string;
-  }[];
-  missingTranslations: {
-    key: string;
-    value: string;
-    context?: string;
-    order: number;
-    selected: boolean;
-    is_plural: boolean;
-    plural_key?: string;
-    comment?: string;
-  }[];
+  updatedTranslations: UpdatedTranslationFromFile[];
+  missingTranslations: MissingTranslationFromFile[];
 }
 
 // Types for grouped translations

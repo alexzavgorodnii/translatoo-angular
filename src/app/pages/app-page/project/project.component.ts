@@ -11,7 +11,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
 import { MatDialog } from '@angular/material/dialog';
-import { NewLanguageComponent } from './new-language/new-language.component';
 import { StateService } from '../../../store/state.service';
 
 @Component({
@@ -123,28 +122,5 @@ export class ProjectComponent {
           this.loading.set(false);
         },
       });
-  }
-
-  openNewLanguageDialog(): void {
-    const dialogRef = this.dialog.open(NewLanguageComponent, {
-      width: '400px',
-      data: {
-        project: this.project(),
-      },
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        result.progress = 0; // Initialize progress to 0
-        // Update the project with the new language
-        this.project.update(project => {
-          const updatedLanguages = [...project.languages, result];
-          return {
-            ...project,
-            languages: updatedLanguages,
-          };
-        });
-      }
-    });
   }
 }

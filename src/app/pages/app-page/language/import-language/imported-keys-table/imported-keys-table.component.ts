@@ -1,7 +1,20 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  OnInit,
+  output,
+  signal,
+  ViewChild,
+} from '@angular/core';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { TranslationFromFile } from '../../../../../../models/translations';
+import {
+  MissingTranslationFromFile,
+  TranslationFromFile,
+  UpdatedTranslationFromFile,
+} from '../../../../../../models/translations';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SelectionModel } from '@angular/cdk/collections';
 
@@ -9,13 +22,8 @@ import { SelectionModel } from '@angular/cdk/collections';
   selector: 'app-imported-keys-table',
   imports: [MatTableModule, MatPaginatorModule, MatCheckboxModule],
   template: `
-    <div
-      [class]="
-        'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
-        'relative min-h-[200px] overflow-auto'
-      "
-    >
-      <table mat-table [dataSource]="translations()">
+    <div [class]="'relative h-full min-h-[200px] overflow-auto'">
+      <table mat-table [dataSource]="dataSource()">
         <ng-container matColumnDef="select">
           <th mat-header-cell *matHeaderCellDef>
             <mat-checkbox
@@ -42,22 +50,24 @@ import { SelectionModel } from '@angular/cdk/collections';
         <ng-container matColumnDef="value">
           <th mat-header-cell *matHeaderCellDef>Value</th>
           <td mat-cell *matCellDef="let row">
-            @if (row.temp_value) {
-              <span class="font-bold text-gray-200">{{ row.temp_value }}</span>
+            @if (row.newValue && row.oldValue) {
+              <span class="text-gray-400">{{ row.oldValue }}</span>
+              <span> → </span>
+              <span>{{ row.newValue }}</span>
             } @else {
               {{ row.value }}
             }
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns(); sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
       </table>
     </div>
 
     <mat-paginator
-      #missingPaginator
-      [length]="translations().data.length"
+      #paginator
+      [length]="dataSource().data.length"
       [pageSize]="20"
       [showFirstLastButtons]="true"
       aria-label="Select page of GitHub search results"
@@ -66,14 +76,39 @@ import { SelectionModel } from '@angular/cdk/collections';
   styleUrl: './imported-keys-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ImportedKeysTableComponent {
-  displayedColumns: string[] = ['select', 'key', 'value'];
-  translations = input<MatTableDataSource<TranslationFromFile>>(new MatTableDataSource<TranslationFromFile>([]));
-  selection = new SelectionModel<TranslationFromFile>(true, []);
+export class ImportedKeysTableComponent implements OnInit, AfterViewInit {
+  displayedColumns = signal<string[]>(['key', 'value']);
+  withSelection = input<boolean>(false);
+  translations = input<TranslationFromFile[] | UpdatedTranslationFromFile[] | MissingTranslationFromFile[]>([]);
+  selection = new SelectionModel<TranslationFromFile | UpdatedTranslationFromFile | MissingTranslationFromFile>(
+    true,
+    [],
+  );
+  dataSource = signal(
+    new MatTableDataSource<TranslationFromFile | UpdatedTranslationFromFile | MissingTranslationFromFile>([]),
+  );
+  selectedItems = output<TranslationFromFile[] | UpdatedTranslationFromFile[] | MissingTranslationFromFile[]>();
+  @ViewChild(MatPaginator) paginator?: MatPaginator;
+
+  ngOnInit() {
+    this.dataSource().data = this.translations();
+    if (this.withSelection()) {
+      this.displayedColumns().unshift('select');
+      this.selection.changed.subscribe(() => {
+        this.selectedItems.emit(this.selection.selected as any);
+      });
+    }
+  }
+
+  ngAfterViewInit() {
+    if (this.paginator) {
+      this.dataSource().paginator = this.paginator;
+    }
+  }
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.translations().data.length;
+    const numRows = this.dataSource().data.length;
     return numSelected === numRows;
   }
 
@@ -83,6 +118,6 @@ export class ImportedKeysTableComponent {
       return;
     }
 
-    this.selection.select(...this.translations().data);
+    this.selection.select(...this.dataSource().data);
   }
 }

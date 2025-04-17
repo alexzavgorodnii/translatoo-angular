@@ -9,6 +9,29 @@ export type TranslationFromFile = {
   plural_key?: string;
 };
 
+export type UpdatedTranslationFromFile = {
+  key: string;
+  oldValue: string;
+  newValue: string;
+  context?: string;
+  order: number;
+  selected: boolean;
+  is_plural: boolean;
+  plural_key?: string;
+  comment?: string;
+};
+
+export type MissingTranslationFromFile = {
+  key: string;
+  value: string;
+  context?: string;
+  order: number;
+  selected: boolean;
+  is_plural: boolean;
+  plural_key?: string;
+  comment?: string;
+};
+
 export type Translation = TranslationFromFile & {
   id?: number;
   context?: string;

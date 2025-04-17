@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ArrowRight, LucideAngularModule, PanelLeft, Plus, X } from 'lucide-angular';
 import { ProjectWithLanguages } from '../../../../../models/projects';
 import { StateService } from '../../../../store/state.service';
@@ -19,9 +19,18 @@ import { take } from 'rxjs/internal/operators/take';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { TranslationFromFile } from '../../../../../models/translations';
+import {
+  MissingTranslationFromFile,
+  TranslationFromFile,
+  UpdatedTranslationFromFile,
+} from '../../../../../models/translations';
 import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-table.component';
+import { compareTranslations, parseFileContent, readFileContent } from '../../../../../utils/utils';
+import {
+  ImportConfirmationComponent,
+  ImportConfirmationResult,
+} from './import-confirmation/import-confirmation.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-import-language',
@@ -40,7 +49,6 @@ import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-
     MatProgressSpinnerModule,
     MatRadioModule,
     MatTabsModule,
-    MatTableModule,
     ImportedKeysTableComponent,
   ],
   template: `
@@ -60,7 +68,7 @@ import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-
           }
         </a>
         <span>/</span>
-        <a mat-button [routerLink]="['/', 'projects', language().id]">
+        <a mat-button [routerLink]="['/', 'languages', language().id]">
           @if (loadingLanguage()) {
             <mat-spinner color="primary" diameter="16"></mat-spinner>
           } @else {
@@ -73,7 +81,7 @@ import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-
       <div class="flex-grow"></div>
     </mat-toolbar>
     <mat-divider></mat-divider>
-    <div class="w-full p-10">
+    <div class="max-h-[calc(100vh-var(--mat-toolbar-standard-height)-2.5rem)] w-full overflow-auto p-10">
       @if (loading()) {
         <mat-progress-bar mode="query"></mat-progress-bar>
       } @else if (error()) {
@@ -87,14 +95,69 @@ import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-
           </mat-card-content>
         </mat-card>
       } @else {
-        <mat-card appearance="outlined">
+        <mat-card appearance="outlined" class="w-full">
           <mat-card-header>
             <mat-card-title>Upload Language Keys</mat-card-title>
             <mat-card-subtitle>Fill in the details to upload your language keys.</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
             <div class="mt-4 mb-4 flex w-full flex-col rounded-2xl bg-[var(--mat-sys-background)] p-4">
-              @if (!fileProcessed()) {
+              @if (fileProcessed()) {
+                <mat-tab-group>
+                  <mat-tab>
+                    <ng-template mat-tab-label>
+                      <div class="flex flex-row items-center gap-2">
+                        <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
+                        New
+                        <span class="ml-1 inline-flex rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
+                          {{ newTranslations().length }}
+                        </span>
+                      </div>
+                    </ng-template>
+                    <p class="mt-4 mb-4 font-bold">These keys will be added to your language.</p>
+                    <app-imported-keys-table [translations]="newTranslations()"></app-imported-keys-table>
+                  </mat-tab>
+
+                  <mat-tab>
+                    <ng-template mat-tab-label>
+                      <div class="flex flex-row items-center gap-2">
+                        <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
+                        Updates
+                        <span class="ml-1 inline-flex rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
+                          {{ updateTranslations().length }}
+                        </span>
+                      </div>
+                    </ng-template>
+                    <p class="mt-4 mb-4 font-bold">Choose which translations to update with new values.</p>
+                    <app-imported-keys-table
+                      [translations]="updateTranslations()"
+                      [withSelection]="true"
+                      (selectedItems)="updateTranslationsSelectionHandler($event)"
+                    ></app-imported-keys-table>
+                  </mat-tab>
+
+                  <mat-tab>
+                    <ng-template mat-tab-label>
+                      <div class="flex flex-row items-center gap-2">
+                        <lucide-icon [img]="X" [size]="16"></lucide-icon>
+                        Missing
+                        <span class="ml-1 rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
+                          {{ missingTranslations().length }}
+                        </span>
+                      </div>
+                    </ng-template>
+                    <p class="mt-4 mb-4 font-bold">
+                      These keys exist in your language but not in the imported file. Select keys to delete (unselected
+                      keys will be kept).
+                    </p>
+                    <app-imported-keys-table
+                      [translations]="missingTranslations()"
+                      [withSelection]="true"
+                      (selectedItems)="missingTranslationsSelectionHandler($event)"
+                    ></app-imported-keys-table>
+                  </mat-tab>
+                </mat-tab-group>
+              } @else {
                 <p class="mb-2 font-bold">Select the file you would like to import keys from.</p>
                 <div class="flex flex-col gap-[calc(24px)]">
                   <div class="flex flex-col gap-2">
@@ -112,7 +175,7 @@ import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-
                   @if (showJsonFormatSelector()) {
                     <div class="mt-2 flex flex-col gap-2">
                       <p class="font-bold">Select JSON format</p>
-                      <mat-radio-group class="flex flex-col" aria-label="JSON format" [(ngModel)]="selectedJsonFormat">
+                      <mat-radio-group class="flex flex-col" aria-label="JSON format" [(ngModel)]="selectedFormat">
                         <mat-radio-button value="keyvalue-json">Key-Value JSON</mat-radio-button>
                         <mat-radio-button value="i18next-json">i18next JSON</mat-radio-button>
                         <mat-radio-button value="arb">Flutter ARB</mat-radio-button>
@@ -120,64 +183,18 @@ import { ImportedKeysTableComponent } from './imported-keys-table/imported-keys-
                     </div>
                   }
                 </div>
-              } @else {
-                <mat-tab-group>
-                  <mat-tab>
-                    <ng-template mat-tab-label>
-                      <div class="flex flex-row items-center gap-2">
-                        <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
-                        New
-                        <span className="ml-1 rounded-full bg-[var(--mat-sys-primary-container)] px-2 text-xs">
-                          0
-                        </span>
-                      </div>
-                    </ng-template>
-                    <p class="mt-4 mb-4 font-bold">These keys will be added to your language.</p>
-                    <app-imported-keys-table [translations]="newTranslations"></app-imported-keys-table>
-                  </mat-tab>
-
-                  <mat-tab>
-                    <ng-template mat-tab-label>
-                      <div class="flex flex-row items-center gap-2">
-                        <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
-                        Updates
-                        <span className="ml-1 rounded-full bg-[var(--mat-sys-primary-container)] px-2 text-xs">
-                          0
-                        </span>
-                      </div>
-                    </ng-template>
-                    <p class="mt-4 mb-4 font-bold">Choose which translations to update with new values.</p>
-                    <app-imported-keys-table [translations]="updateTranslations"></app-imported-keys-table>
-                  </mat-tab>
-
-                  <mat-tab>
-                    <ng-template mat-tab-label>
-                      <div class="flex flex-row items-center gap-2">
-                        <lucide-icon [img]="X" [size]="16"></lucide-icon>
-                        Missing
-                        <span className="ml-1 rounded-full bg-[var(--mat-sys-primary-container)] px-2 text-xs">
-                          0
-                        </span>
-                      </div>
-                    </ng-template>
-                    <p class="mt-4 mb-4 font-bold">
-                      These keys exist in your language but not in the imported file. Select keys to delete (unselected
-                      keys will be kept).
-                    </p>
-                    <app-imported-keys-table [translations]="missingTranslations"></app-imported-keys-table>
-                  </mat-tab>
-                </mat-tab-group>
               }
             </div>
           </mat-card-content>
           <mat-card-actions class="mt-4 gap-2">
             <button mat-button class="!text-[var(--mat-sys-on-surface)]" (click)="onCancelClick()">Cancel</button>
-            @if (!fileProcessed()) {
-              <button mat-flat-button (click)="onNextClick()" cdkFocusInitial>Next</button>
-            } @else {
+            @if (fileProcessed()) {
               <button mat-flat-button (click)="onApplyClick()" cdkFocusInitial>
-                Apply changes (0 new, 0 updated, 0 to delete)
+                Apply changes ({{ newTranslations().length }} new, {{ selectedUpdateTranslations().length }} updated,
+                {{ selectedMissingTranslations().length }} to delete)
               </button>
+            } @else {
+              <button mat-flat-button (click)="onNextClick()" cdkFocusInitial>Parse File</button>
             }
           </mat-card-actions>
         </mat-card>
@@ -192,13 +209,15 @@ export class ImportLanguageComponent {
   readonly Plus = Plus;
   readonly ArrowRight = ArrowRight;
   readonly X = X;
+  readonly router = inject(Router);
+  readonly dialog = inject(MatDialog);
   readonly project = signal<ProjectWithLanguages>({
     id: '',
     created_at: '',
     name: '',
     languages: [],
   });
-  language = signal<LanguageWithTranslations>({
+  readonly language = signal<LanguageWithTranslations>({
     id: '',
     name: '',
     project_id: '',
@@ -211,13 +230,15 @@ export class ImportLanguageComponent {
   loadingProject = signal<boolean>(true);
   loadingLanguage = signal<boolean>(true);
   error = signal<boolean>(false);
-  fileProcessed = signal<boolean>(true);
+  fileProcessed = signal<boolean>(false);
   selectedFile: File | null = null;
-  newTranslations = new MatTableDataSource<TranslationFromFile>([]);
-  updateTranslations = new MatTableDataSource<TranslationFromFile>([]);
-  missingTranslations = new MatTableDataSource<TranslationFromFile>([]);
+  newTranslations = signal<TranslationFromFile[]>([]);
+  updateTranslations = signal<UpdatedTranslationFromFile[]>([]);
+  selectedUpdateTranslations = signal<UpdatedTranslationFromFile[]>([]);
+  missingTranslations = signal<MissingTranslationFromFile[]>([]);
+  selectedMissingTranslations = signal<MissingTranslationFromFile[]>([]);
   readonly showJsonFormatSelector = signal<boolean>(false);
-  readonly selectedJsonFormat = model('keyvalue-json');
+  readonly selectedFormat = model('keyvalue-json');
 
   private readonly stateService: StateService = inject(StateService);
   private readonly supabaseService: SupabaseService = inject(SupabaseService);
@@ -271,6 +292,7 @@ export class ImportLanguageComponent {
 
       // Detect file type to show JSON format selector if needed
       const fileExtension = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
+      this.selectedFormat.set(fileExtension === 'json' ? 'keyvalue-json' : fileExtension);
       this.showJsonFormatSelector.set(fileExtension === 'json');
     }
   }
@@ -280,13 +302,124 @@ export class ImportLanguageComponent {
     console.log('Cancel button clicked');
   }
 
-  onNextClick(): void {
+  async onNextClick() {
     // Handle the next button click event here
-    console.log('Next button clicked');
+    if (!this.selectedFile) {
+      return;
+    }
+
+    try {
+      const fileContent = await readFileContent(this.selectedFile);
+      const imported = parseFileContent(fileContent, this.selectedFormat());
+      // setImportedTranslations(imported);
+      const result = compareTranslations(imported, this.language().translations);
+      console.log('Parsed imported translations:', result);
+      this.newTranslations.set(result.newTranslations);
+      this.updateTranslations.set(result.updatedTranslations);
+      this.missingTranslations.set(result.missingTranslations);
+    } catch (err) {
+      console.error('Import error:', err);
+      // setError(err instanceof Error ? err.message : 'Import failed');
+    } finally {
+      this.fileProcessed.set(true);
+    }
   }
 
   onApplyClick(): void {
     // Handle the apply button click event here
     console.log('Apply button clicked');
+    const dialogRef = this.dialog.open(ImportConfirmationComponent, {
+      width: '400px',
+      data: {
+        languageName: this.language().name,
+        newTranslationsCount: this.newTranslations().length,
+        updatedTranslationsCount: this.selectedUpdateTranslations().length,
+        missingTranslationsCount: this.selectedMissingTranslations().length,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: ImportConfirmationResult) => {
+      if (result.confirm) {
+        console.log('Confirmed:', result);
+      }
+    });
+  }
+
+  updateTranslationsSelectionHandler(
+    event: TranslationFromFile[] | UpdatedTranslationFromFile[] | MissingTranslationFromFile[],
+  ): void {
+    console.log('Selected items:', event);
+    this.selectedUpdateTranslations.set(event as UpdatedTranslationFromFile[]);
+  }
+
+  missingTranslationsSelectionHandler(
+    event: TranslationFromFile[] | UpdatedTranslationFromFile[] | MissingTranslationFromFile[],
+  ): void {
+    console.log('Selected missingTranslationsSelectionHandler items:', event);
+    this.selectedMissingTranslations.set(event as MissingTranslationFromFile[]);
+  }
+
+  finishImport(): void {
+    try {
+      // Start with current translations
+      const finalTranslations = [...(this.language().translations || [])];
+
+      // 1. Add all new translations
+      this.newTranslations().forEach(newTranslation => {
+        finalTranslations.push({
+          ...newTranslation,
+          created_at: new Date().toISOString(),
+          language_id: this.language().id,
+        });
+      });
+
+      // 2. Update translations that were selected
+      this.selectedUpdateTranslations().forEach(update => {
+        const index = finalTranslations.findIndex(t => t.key === update.key);
+        if (index !== -1) {
+          finalTranslations[index] = {
+            ...finalTranslations[index],
+            value: update.newValue,
+            context: update.context,
+            comment: update.comment,
+          };
+        }
+      });
+
+      // 3. Remove translations that were selected for deletion
+      const keysToDelete = new Set(this.selectedMissingTranslations().map(t => t.key));
+      const filteredTranslations = finalTranslations.filter(t => !keysToDelete.has(t.key));
+
+      // Update the language with new translations in the database
+      if (this.language().id) {
+        this.supabaseService
+          .updateLanguageTranslations(this.language().id, filteredTranslations)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              console.log('Translations updated successfully');
+              // toast('Import successful', {
+              //   description: `Applied ${comparison.newTranslations.length} new,
+              //   ${comparison.updatedTranslations.filter(t => t.selected).length} updated,
+              //   ${comparison.missingTranslations.filter(t => t.selected).length} to delete`,
+              // });
+              this.router.navigate(['/', 'languages', this.language().id]);
+            },
+            error: error => {
+              console.error('Error updating translations:', error);
+            },
+          });
+      } else {
+        throw new Error('Language ID is missing');
+      }
+    } catch (err) {
+      console.error('Failed to apply changes:', err);
+      // toast('Import failed', {
+      //   description: err instanceof Error ? err.message : 'Failed to apply changes',
+      // });
+    } finally {
+      // setIsProgress(false);
+      // setConfirmDialogOpen(false);
+    }
   }
 }

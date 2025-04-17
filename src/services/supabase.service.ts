@@ -4,7 +4,7 @@ import { environment } from '../environments/environment';
 import { Observable } from 'rxjs/internal/Observable';
 import { Project, ProjectWithLanguages } from '../models/projects';
 import { Language, LanguageWithTranslations } from '../models/languages';
-import { Translation } from '../models/translations';
+import { Translation, TranslationFromFile } from '../models/translations';
 
 @Injectable({
   providedIn: 'root',
@@ -183,6 +183,43 @@ export class SupabaseService {
           } else {
             observer.next(response.data as Translation[]);
             observer.complete();
+          }
+        });
+    });
+  }
+
+  updateLanguageTranslations(languageId: string, translations: TranslationFromFile[]): Observable<Translation[]> {
+    return new Observable(observer => {
+      this.supabase
+        .from('translation')
+        .delete()
+        .eq('language_id', languageId)
+        .then(response => {
+          if (response.error) {
+            observer.error(new Error(`Failed to delete existing translations: ${response.error}`));
+          } else {
+            const translationsToInsert = translations.map(t => ({
+              language_id: languageId,
+              key: t.key,
+              value: t.value,
+              context: t.context || null,
+              comment: t.comment || null,
+              is_plural: t.is_plural || false,
+              plural_key: t.plural_key || null,
+              order: t.order || 0,
+            }));
+            this.supabase
+              .from('translation')
+              .insert(translationsToInsert)
+              .select()
+              .then(insertResponse => {
+                if (insertResponse.error) {
+                  observer.error(new Error(`Failed to insert translations: ${insertResponse.error}`));
+                } else {
+                  observer.next(insertResponse.data as Translation[]);
+                  observer.complete();
+                }
+              });
           }
         });
     });
