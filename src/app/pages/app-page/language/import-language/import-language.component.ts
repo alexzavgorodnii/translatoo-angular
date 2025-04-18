@@ -31,6 +31,7 @@ import {
   ImportConfirmationResult,
 } from './import-confirmation/import-confirmation.component';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-import-language',
@@ -104,7 +105,7 @@ import { MatDialog } from '@angular/material/dialog';
             <div class="mt-4 mb-4 flex w-full flex-col rounded-2xl bg-[var(--mat-sys-background)] p-4">
               @if (fileProcessed()) {
                 <mat-tab-group>
-                  <mat-tab>
+                  <mat-tab [disabled]="sending()">
                     <ng-template mat-tab-label>
                       <div class="flex flex-row items-center gap-2">
                         <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
@@ -118,7 +119,7 @@ import { MatDialog } from '@angular/material/dialog';
                     <app-imported-keys-table [translations]="newTranslations()"></app-imported-keys-table>
                   </mat-tab>
 
-                  <mat-tab>
+                  <mat-tab [disabled]="sending()">
                     <ng-template mat-tab-label>
                       <div class="flex flex-row items-center gap-2">
                         <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
@@ -136,7 +137,7 @@ import { MatDialog } from '@angular/material/dialog';
                     ></app-imported-keys-table>
                   </mat-tab>
 
-                  <mat-tab>
+                  <mat-tab [disabled]="sending()">
                     <ng-template mat-tab-label>
                       <div class="flex flex-row items-center gap-2">
                         <lucide-icon [img]="X" [size]="16"></lucide-icon>
@@ -184,12 +185,24 @@ import { MatDialog } from '@angular/material/dialog';
                   }
                 </div>
               }
+              <p class="mt-4 mb-2 font-bold">Add Tags for Imported Keys</p>
+              <mat-form-field class="w-full max-w-[calc(400px)]">
+                <mat-label>Tag</mat-label>
+                <input matInput [(ngModel)]="tag" />
+              </mat-form-field>
             </div>
           </mat-card-content>
           <mat-card-actions class="mt-4 gap-2">
-            <button mat-button class="!text-[var(--mat-sys-on-surface)]" (click)="onCancelClick()">Cancel</button>
+            <button
+              mat-button
+              class="!text-[var(--mat-sys-on-surface)]"
+              (click)="onCancelClick()"
+              [disabled]="sending()"
+            >
+              Cancel
+            </button>
             @if (fileProcessed()) {
-              <button mat-flat-button (click)="onApplyClick()" cdkFocusInitial>
+              <button mat-flat-button (click)="onApplyClick()" cdkFocusInitial [disabled]="sending()">
                 Apply changes ({{ newTranslations().length }} new, {{ selectedUpdateTranslations().length }} updated,
                 {{ selectedMissingTranslations().length }} to delete)
               </button>
@@ -237,12 +250,15 @@ export class ImportLanguageComponent {
   selectedUpdateTranslations = signal<UpdatedTranslationFromFile[]>([]);
   missingTranslations = signal<MissingTranslationFromFile[]>([]);
   selectedMissingTranslations = signal<MissingTranslationFromFile[]>([]);
+  sending = signal<boolean>(false);
   readonly showJsonFormatSelector = signal<boolean>(false);
   readonly selectedFormat = model('keyvalue-json');
+  readonly tag = model('');
 
   private readonly stateService: StateService = inject(StateService);
   private readonly supabaseService: SupabaseService = inject(SupabaseService);
   private readonly route = inject(ActivatedRoute);
+  private readonly _snackBar = inject(MatSnackBar);
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -298,8 +314,7 @@ export class ImportLanguageComponent {
   }
 
   onCancelClick(): void {
-    // Handle the cancel button click event here
-    console.log('Cancel button clicked');
+    this.router.navigate(['/', 'languages', this.language().id]);
   }
 
   async onNextClick() {
@@ -311,23 +326,18 @@ export class ImportLanguageComponent {
     try {
       const fileContent = await readFileContent(this.selectedFile);
       const imported = parseFileContent(fileContent, this.selectedFormat());
-      // setImportedTranslations(imported);
       const result = compareTranslations(imported, this.language().translations);
-      console.log('Parsed imported translations:', result);
       this.newTranslations.set(result.newTranslations);
       this.updateTranslations.set(result.updatedTranslations);
       this.missingTranslations.set(result.missingTranslations);
     } catch (err) {
       console.error('Import error:', err);
-      // setError(err instanceof Error ? err.message : 'Import failed');
     } finally {
       this.fileProcessed.set(true);
     }
   }
 
   onApplyClick(): void {
-    // Handle the apply button click event here
-    console.log('Apply button clicked');
     const dialogRef = this.dialog.open(ImportConfirmationComponent, {
       width: '400px',
       data: {
@@ -339,8 +349,9 @@ export class ImportLanguageComponent {
     });
 
     dialogRef.afterClosed().subscribe((result: ImportConfirmationResult) => {
-      if (result.confirm) {
-        console.log('Confirmed:', result);
+      if (result && result.confirm) {
+        this.sending.set(true);
+        this.finishImport();
       }
     });
   }
@@ -348,78 +359,77 @@ export class ImportLanguageComponent {
   updateTranslationsSelectionHandler(
     event: TranslationFromFile[] | UpdatedTranslationFromFile[] | MissingTranslationFromFile[],
   ): void {
-    console.log('Selected items:', event);
     this.selectedUpdateTranslations.set(event as UpdatedTranslationFromFile[]);
   }
 
   missingTranslationsSelectionHandler(
     event: TranslationFromFile[] | UpdatedTranslationFromFile[] | MissingTranslationFromFile[],
   ): void {
-    console.log('Selected missingTranslationsSelectionHandler items:', event);
     this.selectedMissingTranslations.set(event as MissingTranslationFromFile[]);
   }
 
   finishImport(): void {
-    try {
-      // Start with current translations
-      const finalTranslations = [...(this.language().translations || [])];
+    // Start with current translations
+    const finalTranslations = [...(this.language().translations || [])];
 
-      // 1. Add all new translations
-      this.newTranslations().forEach(newTranslation => {
-        finalTranslations.push({
-          ...newTranslation,
-          created_at: new Date().toISOString(),
-          language_id: this.language().id,
-        });
+    // 1. Add all new translations
+    this.newTranslations().forEach(newTranslation => {
+      finalTranslations.push({
+        ...newTranslation,
+        created_at: new Date().toISOString(),
+        language_id: this.language().id,
       });
+    });
 
-      // 2. Update translations that were selected
-      this.selectedUpdateTranslations().forEach(update => {
-        const index = finalTranslations.findIndex(t => t.key === update.key);
-        if (index !== -1) {
-          finalTranslations[index] = {
-            ...finalTranslations[index],
-            value: update.newValue,
-            context: update.context,
-            comment: update.comment,
-          };
-        }
-      });
-
-      // 3. Remove translations that were selected for deletion
-      const keysToDelete = new Set(this.selectedMissingTranslations().map(t => t.key));
-      const filteredTranslations = finalTranslations.filter(t => !keysToDelete.has(t.key));
-
-      // Update the language with new translations in the database
-      if (this.language().id) {
-        this.supabaseService
-          .updateLanguageTranslations(this.language().id, filteredTranslations)
-          .pipe(take(1))
-          .subscribe({
-            next: () => {
-              console.log('Translations updated successfully');
-              // toast('Import successful', {
-              //   description: `Applied ${comparison.newTranslations.length} new,
-              //   ${comparison.updatedTranslations.filter(t => t.selected).length} updated,
-              //   ${comparison.missingTranslations.filter(t => t.selected).length} to delete`,
-              // });
-              this.router.navigate(['/', 'languages', this.language().id]);
-            },
-            error: error => {
-              console.error('Error updating translations:', error);
-            },
-          });
-      } else {
-        throw new Error('Language ID is missing');
+    // 2. Update translations that were selected
+    this.selectedUpdateTranslations().forEach(update => {
+      const index = finalTranslations.findIndex(t => t.key === update.key);
+      if (index !== -1) {
+        finalTranslations[index] = {
+          ...finalTranslations[index],
+          value: update.newValue,
+          context: update.context,
+          comment: update.comment,
+        };
       }
-    } catch (err) {
-      console.error('Failed to apply changes:', err);
-      // toast('Import failed', {
-      //   description: err instanceof Error ? err.message : 'Failed to apply changes',
-      // });
-    } finally {
-      // setIsProgress(false);
-      // setConfirmDialogOpen(false);
+    });
+
+    // 3. Remove translations that were selected for deletion
+    const keysToDelete = new Set(this.selectedMissingTranslations().map(t => t.key));
+    const filteredTranslations = finalTranslations.filter(t => !keysToDelete.has(t.key));
+
+    // Update the language with new translations in the database
+    if (this.language().id) {
+      this.supabaseService
+        .updateLanguageTranslations(this.language().id, filteredTranslations, this.tag())
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this._snackBar.open(
+              `Import successful (Applied ${this.newTranslations().length} new,
+                ${this.selectedUpdateTranslations().length} updated,
+                ${this.selectedMissingTranslations().length} to delete)`,
+              'Close',
+              {
+                duration: 5000,
+              },
+            );
+            this.sending.set(false);
+            this.router.navigate(['/', 'languages', this.language().id]);
+          },
+          error: error => {
+            this._snackBar.open(
+              `Import failed (${error instanceof Error ? error.message : 'Failed to apply changes'}`,
+              'Close',
+              {
+                duration: 5000,
+              },
+            );
+            this.sending.set(false);
+          },
+        });
+    } else {
+      throw new Error('Language ID is missing');
     }
   }
 }

@@ -188,7 +188,11 @@ export class SupabaseService {
     });
   }
 
-  updateLanguageTranslations(languageId: string, translations: TranslationFromFile[]): Observable<Translation[]> {
+  updateLanguageTranslations(
+    languageId: string,
+    translations: TranslationFromFile[],
+    tag: string,
+  ): Observable<Translation[]> {
     return new Observable(observer => {
       this.supabase
         .from('translation')
@@ -207,6 +211,7 @@ export class SupabaseService {
               is_plural: t.is_plural || false,
               plural_key: t.plural_key || null,
               order: t.order || 0,
+              tag: tag && tag.length > 0 ? tag : null,
             }));
             this.supabase
               .from('translation')

@@ -28,17 +28,17 @@ export interface ImportConfirmationComponentData {
       <p>Are you sure you want to apply these changes to {{ data.languageName }}?</p>
       <div class="py-4">
         <div class="space-y-2">
-          <div class="flex items-center gap-1 text-sm">
+          <div class="flex items-center gap-1">
             <lucide-icon class="mr-2 h-4 w-4 text-green-500" [img]="Plus" [size]="16"></lucide-icon>
             <span>{{ data.newTranslationsCount }} new translations will be added</span>
           </div>
 
-          <div class="flex items-center gap-1 text-sm">
+          <div class="flex items-center gap-1">
             <lucide-icon class="mr-2 h-4 w-4 text-orange-500" [img]="ArrowRight" [size]="16"></lucide-icon>
             <span>{{ data.updatedTranslationsCount }} translations will be updated</span>
           </div>
 
-          <div class="flex items-center gap-1 text-sm">
+          <div class="flex items-center gap-1">
             <lucide-icon class="mr-2 h-4 w-4 text-red-500" [img]="X" [size]="16"></lucide-icon>
             <span>{{ data.missingTranslationsCount }} translations will be deleted</span>
           </div>
