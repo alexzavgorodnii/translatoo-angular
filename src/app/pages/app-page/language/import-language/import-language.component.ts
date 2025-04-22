@@ -104,60 +104,71 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           <mat-card-content>
             <div class="mt-4 mb-4 flex w-full flex-col rounded-2xl bg-[var(--mat-sys-background)] p-4">
               @if (fileProcessed()) {
-                <mat-tab-group>
-                  <mat-tab [disabled]="sending()">
-                    <ng-template mat-tab-label>
-                      <div class="flex flex-row items-center gap-2">
-                        <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
-                        New
-                        <span class="ml-1 inline-flex rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
-                          {{ newTranslations().length }}
-                        </span>
-                      </div>
-                    </ng-template>
-                    <p class="mt-4 mb-4 font-bold">These keys will be added to your language.</p>
-                    <app-imported-keys-table [translations]="newTranslations()"></app-imported-keys-table>
-                  </mat-tab>
+                @if (
+                  newTranslations().length === 0 &&
+                  updateTranslations().length === 0 &&
+                  missingTranslations().length === 0
+                ) {
+                  <p class="mb-2 font-bold">No keys for update found in the imported file.</p>
+                  <p class="text-sm text-[var(--mat-sys-on-surface-variant)]">
+                    The imported file does not contain any new keys or updates. Please check the file and try again.
+                  </p>
+                } @else {
+                  <mat-tab-group>
+                    <mat-tab [disabled]="sending()">
+                      <ng-template mat-tab-label>
+                        <div class="flex flex-row items-center gap-2">
+                          <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
+                          New
+                          <span class="ml-1 inline-flex rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
+                            {{ newTranslations().length }}
+                          </span>
+                        </div>
+                      </ng-template>
+                      <p class="mt-4 mb-4 font-bold">These keys will be added to your language.</p>
+                      <app-imported-keys-table [translations]="newTranslations()"></app-imported-keys-table>
+                    </mat-tab>
 
-                  <mat-tab [disabled]="sending()">
-                    <ng-template mat-tab-label>
-                      <div class="flex flex-row items-center gap-2">
-                        <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
-                        Updates
-                        <span class="ml-1 inline-flex rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
-                          {{ updateTranslations().length }}
-                        </span>
-                      </div>
-                    </ng-template>
-                    <p class="mt-4 mb-4 font-bold">Choose which translations to update with new values.</p>
-                    <app-imported-keys-table
-                      [translations]="updateTranslations()"
-                      [withSelection]="true"
-                      (selectedItems)="updateTranslationsSelectionHandler($event)"
-                    ></app-imported-keys-table>
-                  </mat-tab>
+                    <mat-tab [disabled]="sending()">
+                      <ng-template mat-tab-label>
+                        <div class="flex flex-row items-center gap-2">
+                          <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
+                          Updates
+                          <span class="ml-1 inline-flex rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
+                            {{ updateTranslations().length }}
+                          </span>
+                        </div>
+                      </ng-template>
+                      <p class="mt-4 mb-4 font-bold">Choose which translations to update with new values.</p>
+                      <app-imported-keys-table
+                        [translations]="updateTranslations()"
+                        [withSelection]="true"
+                        (selectedItems)="updateTranslationsSelectionHandler($event)"
+                      ></app-imported-keys-table>
+                    </mat-tab>
 
-                  <mat-tab [disabled]="sending()">
-                    <ng-template mat-tab-label>
-                      <div class="flex flex-row items-center gap-2">
-                        <lucide-icon [img]="X" [size]="16"></lucide-icon>
-                        Missing
-                        <span class="ml-1 rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
-                          {{ missingTranslations().length }}
-                        </span>
-                      </div>
-                    </ng-template>
-                    <p class="mt-4 mb-4 font-bold">
-                      These keys exist in your language but not in the imported file. Select keys to delete (unselected
-                      keys will be kept).
-                    </p>
-                    <app-imported-keys-table
-                      [translations]="missingTranslations()"
-                      [withSelection]="true"
-                      (selectedItems)="missingTranslationsSelectionHandler($event)"
-                    ></app-imported-keys-table>
-                  </mat-tab>
-                </mat-tab-group>
+                    <mat-tab [disabled]="sending()">
+                      <ng-template mat-tab-label>
+                        <div class="flex flex-row items-center gap-2">
+                          <lucide-icon [img]="X" [size]="16"></lucide-icon>
+                          Missing
+                          <span class="ml-1 rounded-full bg-[var(--mat-sys-primary)] px-2 text-xs">
+                            {{ missingTranslations().length }}
+                          </span>
+                        </div>
+                      </ng-template>
+                      <p class="mt-4 mb-4 font-bold">
+                        These keys exist in your language but not in the imported file. Select keys to delete
+                        (unselected keys will be kept).
+                      </p>
+                      <app-imported-keys-table
+                        [translations]="missingTranslations()"
+                        [withSelection]="true"
+                        (selectedItems)="missingTranslationsSelectionHandler($event)"
+                      ></app-imported-keys-table>
+                    </mat-tab>
+                  </mat-tab-group>
+                }
               } @else {
                 <p class="mb-2 font-bold">Select the file you would like to import keys from.</p>
                 <div class="flex flex-col gap-[calc(24px)]">
@@ -185,28 +196,44 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                   }
                 </div>
               }
-              <p class="mt-4 mb-2 font-bold">Add Tags for Imported Keys</p>
-              <mat-form-field class="w-full max-w-[calc(400px)]">
-                <mat-label>Tag</mat-label>
-                <input matInput [(ngModel)]="tag" />
-              </mat-form-field>
+              @if (
+                newTranslations().length > 0 || updateTranslations().length > 0 || missingTranslations().length > 0
+              ) {
+                <p class="mt-4 mb-2 font-bold">Add Tags for Imported Keys</p>
+                <mat-form-field class="w-full max-w-[calc(400px)]">
+                  <mat-label>Tag</mat-label>
+                  <input matInput [(ngModel)]="tag" />
+                </mat-form-field>
+              }
             </div>
           </mat-card-content>
           <mat-card-actions class="mt-4 gap-2">
-            <button
-              mat-button
-              class="!text-[var(--mat-sys-on-surface)]"
-              (click)="onCancelClick()"
-              [disabled]="sending()"
-            >
-              Cancel
-            </button>
             @if (fileProcessed()) {
-              <button mat-flat-button (click)="onApplyClick()" cdkFocusInitial [disabled]="sending()">
-                Apply changes ({{ newTranslations().length }} new, {{ selectedUpdateTranslations().length }} updated,
-                {{ selectedMissingTranslations().length }} to delete)
+              <button
+                mat-button
+                class="!text-[var(--mat-sys-on-surface)]"
+                (click)="onBackClick()"
+                [disabled]="sending()"
+              >
+                Back
               </button>
+              @if (
+                newTranslations().length > 0 || updateTranslations().length > 0 || missingTranslations().length > 0
+              ) {
+                <button mat-flat-button (click)="onApplyClick()" cdkFocusInitial [disabled]="sending()">
+                  Apply changes ({{ newTranslations().length }} new, {{ selectedUpdateTranslations().length }} updated,
+                  {{ selectedMissingTranslations().length }} to delete)
+                </button>
+              }
             } @else {
+              <button
+                mat-button
+                class="!text-[var(--mat-sys-on-surface)]"
+                (click)="onCancelClick()"
+                [disabled]="sending()"
+              >
+                Cancel
+              </button>
               <button mat-flat-button (click)="onNextClick()" cdkFocusInitial>Parse File</button>
             }
           </mat-card-actions>
@@ -311,6 +338,18 @@ export class ImportLanguageComponent {
       this.selectedFormat.set(fileExtension === 'json' ? 'keyvalue-json' : fileExtension);
       this.showJsonFormatSelector.set(fileExtension === 'json');
     }
+  }
+
+  onBackClick(): void {
+    this.fileProcessed.set(false);
+    this.newTranslations.set([]);
+    this.updateTranslations.set([]);
+    this.missingTranslations.set([]);
+    this.selectedUpdateTranslations.set([]);
+    this.selectedMissingTranslations.set([]);
+    this.selectedFile = null;
+    this.selectedFormat.set('keyvalue-json');
+    this.tag.set('');
   }
 
   onCancelClick(): void {
