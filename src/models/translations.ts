@@ -1,4 +1,5 @@
 export type TranslationFromFile = {
+  id?: number;
   key: string;
   value: string;
   context?: string;
@@ -10,6 +11,7 @@ export type TranslationFromFile = {
 };
 
 export type UpdatedTranslationFromFile = {
+  id: number;
   key: string;
   oldValue: string;
   newValue: string;

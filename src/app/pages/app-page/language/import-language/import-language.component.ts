@@ -369,39 +369,27 @@ export class ImportLanguageComponent {
   }
 
   finishImport(): void {
-    // Start with current translations
-    const finalTranslations = [...(this.language().translations || [])];
-
-    // 1. Add all new translations
-    this.newTranslations().forEach(newTranslation => {
-      finalTranslations.push({
-        ...newTranslation,
-        created_at: new Date().toISOString(),
-        language_id: this.language().id,
-      });
-    });
-
-    // 2. Update translations that were selected
-    this.selectedUpdateTranslations().forEach(update => {
-      const index = finalTranslations.findIndex(t => t.key === update.key);
-      if (index !== -1) {
-        finalTranslations[index] = {
-          ...finalTranslations[index],
-          value: update.newValue,
-          context: update.context,
-          comment: update.comment,
-        };
-      }
-    });
-
-    // 3. Remove translations that were selected for deletion
-    const keysToDelete = new Set(this.selectedMissingTranslations().map(t => t.key));
-    const filteredTranslations = finalTranslations.filter(t => !keysToDelete.has(t.key));
-
     // Update the language with new translations in the database
     if (this.language().id) {
+      const updateTranslations = this.selectedUpdateTranslations().map(t => ({
+        id: t.id,
+        key: t.key,
+        value: t.newValue,
+        context: t.context,
+        comment: t.comment,
+        is_plural: t.is_plural,
+        plural_key: t.plural_key,
+        order: t.order,
+      }));
+
       this.supabaseService
-        .updateLanguageTranslations(this.language().id, filteredTranslations, this.tag())
+        .importScriptTranslations(
+          this.language().id,
+          this.newTranslations(),
+          updateTranslations,
+          this.selectedMissingTranslations(),
+          this.tag(),
+        )
         .pipe(take(1))
         .subscribe({
           next: () => {

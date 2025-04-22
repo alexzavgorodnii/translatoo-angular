@@ -5,6 +5,7 @@ import { Observable } from 'rxjs/internal/Observable';
 import { Project, ProjectWithLanguages } from '../models/projects';
 import { Language, LanguageWithTranslations } from '../models/languages';
 import { Translation, TranslationFromFile } from '../models/translations';
+import { forkJoin } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -188,45 +189,68 @@ export class SupabaseService {
     });
   }
 
-  updateLanguageTranslations(
+  importScriptTranslations(
     languageId: string,
-    translations: TranslationFromFile[],
+    newTranslations: TranslationFromFile[],
+    updateTranslations: TranslationFromFile[],
+    deleteTranslations: TranslationFromFile[],
     tag: string,
-  ): Observable<Translation[]> {
+  ): Observable<void> {
     return new Observable(observer => {
-      this.supabase
-        .from('translation')
-        .delete()
-        .eq('language_id', languageId)
-        .then(response => {
-          if (response.error) {
-            observer.error(new Error(`Failed to delete existing translations: ${response.error}`));
-          } else {
-            const translationsToInsert = translations.map(t => ({
-              language_id: languageId,
-              key: t.key,
-              value: t.value,
-              context: t.context || null,
-              comment: t.comment || null,
-              is_plural: t.is_plural || false,
-              plural_key: t.plural_key || null,
-              order: t.order || 0,
-              tag: tag && tag.length > 0 ? tag : null,
-            }));
-            this.supabase
-              .from('translation')
-              .insert(translationsToInsert)
-              .select()
-              .then(insertResponse => {
-                if (insertResponse.error) {
-                  observer.error(new Error(`Failed to insert translations: ${insertResponse.error}`));
-                } else {
-                  observer.next(insertResponse.data as Translation[]);
-                  observer.complete();
-                }
-              });
-          }
-        });
+      const translationsToInsert = newTranslations.map(t => ({
+        language_id: languageId,
+        key: t.key,
+        value: t.value,
+        context: t.context || null,
+        comment: t.comment || null,
+        is_plural: t.is_plural || false,
+        plural_key: t.plural_key || null,
+        order: t.order || 0,
+        tag: tag && tag.length > 0 ? tag : null,
+      }));
+
+      const translationsToUpdate = updateTranslations.map(t => ({
+        language_id: languageId,
+        id: t.id!,
+        key: t.key,
+        value: t.value,
+        context: t.context || null,
+        comment: t.comment || null,
+        is_plural: t.is_plural || false,
+        plural_key: t.plural_key || null,
+        order: t.order || 0,
+        tag: tag && tag.length > 0 ? tag : null,
+      }));
+
+      const translationsToDelete = deleteTranslations.map(t => ({
+        id: t.id!,
+      }));
+
+      const ids = translationsToDelete.map(t => t.id);
+
+      const insert$ =
+        translationsToInsert.length > 0
+          ? this.supabase.from('translation').insert(translationsToInsert).select()
+          : Promise.resolve({ error: null, data: [] });
+      const delete$ =
+        translationsToDelete.length > 0
+          ? this.supabase.from('translation').delete().in('id', ids)
+          : Promise.resolve({ error: null, data: [] });
+      const update$ =
+        translationsToUpdate.length > 0
+          ? this.supabase.from('translation').upsert(translationsToUpdate, { onConflict: 'id' }).select()
+          : Promise.resolve({ error: null, data: [] });
+
+      forkJoin([insert$, delete$, update$]).subscribe({
+        next: ([insertRes, deleteRes, updateRes]) => {
+          if (insertRes.error) return observer.error(insertRes.error);
+          if (deleteRes && deleteRes.error) return observer.error(deleteRes.error);
+          if (updateRes && updateRes.error) return observer.error(updateRes.error);
+          observer.next();
+          observer.complete();
+        },
+        error: err => observer.error(err),
+      });
     });
   }
 }

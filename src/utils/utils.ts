@@ -28,6 +28,7 @@ export const compareTranslations = (
       const existingTranslation = existingTranslations.find(et => getComparisonKey(et) === compKey)!;
 
       return {
+        id: existingTranslation.id!,
         key: t.key,
         oldValue: existingTranslation.value,
         newValue: t.value,
