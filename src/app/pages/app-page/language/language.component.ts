@@ -105,7 +105,9 @@ import { MatMenuModule } from '@angular/material/menu';
           <table mat-table [dataSource]="translations">
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
-              <td mat-cell *matCellDef="let row">{{ row.key }}</td>
+              <td mat-cell *matCellDef="let row">
+                <b>{{ row.key }}</b>
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="value">
@@ -116,6 +118,13 @@ import { MatMenuModule } from '@angular/material/menu';
                 } @else {
                   {{ row.value }}
                 }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="tag">
+              <th mat-header-cell *matHeaderCellDef>Tag</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="font-bold text-slate-400">{{ row.tag }}</span>
               </td>
             </ng-container>
 
@@ -158,7 +167,7 @@ export class LanguageComponent implements AfterViewInit {
   language: LanguageWithTranslations | null = null;
   loading = signal<boolean>(false);
   title = signal<string>('Language');
-  displayedColumns: string[] = ['key', 'value', 'controls'];
+  displayedColumns: string[] = ['key', 'value', 'tag', 'controls'];
   translations = new MatTableDataSource<Translation>([]);
   copied = signal<boolean>(false);
   @ViewChild(MatPaginator) paginator?: MatPaginator;

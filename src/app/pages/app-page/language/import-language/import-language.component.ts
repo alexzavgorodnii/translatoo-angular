@@ -103,6 +103,17 @@ import { MatSnackBar } from '@angular/material/snack-bar';
           </mat-card-header>
           <mat-card-content>
             <div class="mt-4 mb-4 flex w-full flex-col rounded-2xl bg-[var(--mat-sys-background)] p-4">
+              @if (
+                newTranslations().length > 0 || updateTranslations().length > 0 || missingTranslations().length > 0
+              ) {
+                <div class="mb-2 flex flex-col gap-2">
+                  <p class="mt-4 mb-2 font-bold">Add Tags for Imported Keys</p>
+                  <mat-form-field class="w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
+                    <mat-label>Tag</mat-label>
+                    <input matInput [(ngModel)]="tag" />
+                  </mat-form-field>
+                </div>
+              }
               @if (fileProcessed()) {
                 @if (
                   newTranslations().length === 0 &&
@@ -195,15 +206,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
                     </div>
                   }
                 </div>
-              }
-              @if (
-                newTranslations().length > 0 || updateTranslations().length > 0 || missingTranslations().length > 0
-              ) {
-                <p class="mt-4 mb-2 font-bold">Add Tags for Imported Keys</p>
-                <mat-form-field class="w-full max-w-[calc(400px)]">
-                  <mat-label>Tag</mat-label>
-                  <input matInput [(ngModel)]="tag" />
-                </mat-form-field>
               }
             </div>
           </mat-card-content>

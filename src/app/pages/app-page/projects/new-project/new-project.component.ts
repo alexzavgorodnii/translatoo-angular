@@ -20,11 +20,13 @@ import { SupabaseService } from '../../../../../services/supabase.service';
   template: `
     <h2 mat-dialog-title>New Project</h2>
     <mat-dialog-content>
-      <p>What's the name of your project?</p>
-      <mat-form-field class="w-full">
-        <mat-label>Name</mat-label>
-        <input matInput [(ngModel)]="name" />
-      </mat-form-field>
+      <div class="pt-2">
+        <mat-form-field class="w-full" floatLabel="always" appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput [(ngModel)]="name" />
+          <mat-hint>What's the name of your project?</mat-hint>
+        </mat-form-field>
+      </div>
     </mat-dialog-content>
     <mat-dialog-actions>
       <button mat-button class="!text-[var(--mat-sys-on-surface)]" (click)="onCancelClick()">Cancel</button>

@@ -62,22 +62,25 @@ import { parseJSON, parseI18Next } from '../../../../../utils/parsers/translatio
             <mat-card-subtitle>Fill in the details to create a new language.</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
-            <p class="mt-4 mb-2 font-bold">What is the name of the language?</p>
-            <mat-form-field class="w-full max-w-[calc(400px)]">
-              <mat-label>Name</mat-label>
-              <input matInput [(ngModel)]="name" />
-            </mat-form-field>
-            <p class="mb-2 font-bold">In what type of project is the language being used?</p>
-            <mat-form-field class="w-full max-w-[calc(400px)]">
-              <mat-label>Choose application type</mat-label>
-              <mat-select [(ngModel)]="appType">
-                @for (type of types(); track type.value) {
-                  <mat-option [value]="type.value">
-                    {{ type.name }}
-                  </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+            <div class="flex flex-col gap-6 py-5">
+              <mat-form-field class="w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput [(ngModel)]="name" />
+                <mat-hint>What is the name of the language?</mat-hint>
+              </mat-form-field>
+              <mat-form-field class="w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
+                <mat-label>Choose application type</mat-label>
+                <mat-select [(ngModel)]="appType">
+                  @for (type of types(); track type.value) {
+                    <mat-option [value]="type.value">
+                      {{ type.name }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-hint>What kind of project uses the language?</mat-hint>
+              </mat-form-field>
+            </div>
+
             <div class="mb-4 flex w-full flex-col rounded-2xl bg-[var(--mat-sys-background)] p-4">
               <p class="mb-2 font-bold">Which language would you like to clone the keys from?</p>
               <div class="flex flex-col gap-[calc(24px)]">
