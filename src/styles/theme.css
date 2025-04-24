@@ -101,6 +101,8 @@ html {
   --mat-form-field-container-vertical-padding: 10px;
 
   --mdc-dialog-supporting-text-color: var(--mat-sys-on-surface);
+
+  --mat-table-row-item-container-height: 37px;
 }
 
 .mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field

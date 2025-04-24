@@ -25,6 +25,8 @@ import {
 import { generateI18Next, generateKeyValueJSON } from '../../../../utils/exporters/translation-exporters';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog } from '@angular/material/dialog';
+import { ExportLanguageComponent } from './export-language/export-language.component';
 
 @Component({
   selector: 'app-language',
@@ -63,7 +65,7 @@ import { MatMenuModule } from '@angular/material/menu';
             </span>
           </a>
           <button mat-button>
-            <span class="inline-flex flex-row items-center gap-1">
+            <span class="inline-flex flex-row items-center gap-1" (click)="openExportDialog()">
               <lucide-icon [img]="CloudDownload" [size]="16"></lucide-icon>
               Export
             </span>
@@ -163,6 +165,7 @@ export class LanguageComponent implements AfterViewInit {
   readonly FilePenLine = FilePenLine;
   readonly Check = Check;
   readonly ChevronDown = ChevronDown;
+  readonly dialog = inject(MatDialog);
   private _snackBar = inject(MatSnackBar);
   language: LanguageWithTranslations | null = null;
   loading = signal<boolean>(false);
@@ -203,6 +206,21 @@ export class LanguageComponent implements AfterViewInit {
     if (this.paginator) {
       this.translations.paginator = this.paginator;
     }
+  }
+
+  openExportDialog(): void {
+    const dialogRef = this.dialog.open(ExportLanguageComponent, {
+      width: '400px',
+      data: {
+        languageName: this.language?.name,
+        translations: this.language?.translations,
+      },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Export result:', result);
+      }
+    });
   }
 
   async handleCopyToClipboard(format: string) {
