@@ -8,6 +8,7 @@ export const generateXLIFF = (translations: Translation[], language: LanguageWit
 
   let xliff = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xliff += '<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">\n';
+  // eslint-disable-next-line max-len
   xliff += `  <file source-language="${sourceLang}" target-language="${targetLang}" datatype="plaintext" original="ng2.template">\n`;
   xliff += '    <body>\n';
 
@@ -131,6 +132,7 @@ export const generateXCStrings = (translations: Translation[], language: Languag
 
 // Gettext PO format
 export const generatePO = (translations: Translation[], language: LanguageWithTranslations): string => {
+  // eslint-disable-next-line max-len
   const header = `msgid ""\nmsgstr ""\n"MIME-Version: 1.0\\n"\n"Content-Type: text/plain; charset=UTF-8\\n"\n"Content-Transfer-Encoding: 8bit\\n"\n"X-Generator: Translatoo\\n"\n"Project-Id-Version: ${language.name || 'Translatoo Export'}\\n"\n"Language: ${language.name || 'en'}\\n"\n"Plural-Forms: nplurals=2; plural=(n != 1);\\n"\n\n`;
 
   let result = header;

@@ -103,6 +103,7 @@ html {
   --mdc-dialog-supporting-text-color: var(--mat-sys-on-surface);
 
   --mat-table-row-item-container-height: 37px;
+  --mat-tooltip-container-color: var(--mat-sys-on-surface);
 }
 
 .mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field

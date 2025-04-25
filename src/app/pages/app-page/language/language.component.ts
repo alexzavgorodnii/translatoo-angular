@@ -8,7 +8,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { LanguageWithTranslations } from '../../../../models/languages';
 import { SupabaseService } from '../../../../services/supabase.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { Translation } from '../../../../models/translations';
 import {
@@ -21,12 +21,17 @@ import {
   LucideAngularModule,
   PanelLeft,
   Plus,
+  Search,
 } from 'lucide-angular';
 import { generateI18Next, generateKeyValueJSON } from '../../../../utils/exporters/translation-exporters';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { ExportLanguageComponent } from './export-language/export-language.component';
+import { PaginatorIntlService } from '../../../../utils/paginator-intl.service';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-language',
@@ -41,6 +46,9 @@ import { ExportLanguageComponent } from './export-language/export-language.compo
     MatPaginatorModule,
     LucideAngularModule,
     MatMenuModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
   ],
   template: `
     <mat-toolbar>
@@ -93,7 +101,9 @@ import { ExportLanguageComponent } from './export-language/export-language.compo
     </mat-toolbar>
     <mat-divider></mat-divider>
     <div
-      class="h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-divider-width))] w-full overflow-hidden p-10"
+      [class]="
+        'h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-divider-width))] w-full overflow-hidden px-10 py-5'
+      "
     >
       @if (loading()) {
         <mat-progress-bar mode="query"></mat-progress-bar>
@@ -104,6 +114,10 @@ import { ExportLanguageComponent } from './export-language/export-language.compo
             'relative min-h-[200px] overflow-auto'
           "
         >
+          <mat-form-field class="w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
+            <input matInput (keyup)="applyFilter($event)" placeholder="Search" />
+            <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
+          </mat-form-field>
           <table mat-table [dataSource]="translations">
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
@@ -155,6 +169,7 @@ import { ExportLanguageComponent } from './export-language/export-language.compo
   `,
   styleUrl: './language.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [{ provide: MatPaginatorIntl, useClass: PaginatorIntlService }],
 })
 export class LanguageComponent implements AfterViewInit {
   readonly PanelLeft = PanelLeft;
@@ -165,6 +180,7 @@ export class LanguageComponent implements AfterViewInit {
   readonly FilePenLine = FilePenLine;
   readonly Check = Check;
   readonly ChevronDown = ChevronDown;
+  readonly Search = Search;
   readonly dialog = inject(MatDialog);
   private _snackBar = inject(MatSnackBar);
   language: LanguageWithTranslations | null = null;
@@ -221,6 +237,11 @@ export class LanguageComponent implements AfterViewInit {
         console.log('Export result:', result);
       }
     });
+  }
+
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.translations.filter = filterValue.trim().toLowerCase();
   }
 
   async handleCopyToClipboard(format: string) {

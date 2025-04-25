@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Translation } from '../../../../../models/translations';
+import { generateKeyValueJSON, generateI18Next } from '../../../../../utils/exporters/translation-exporters';
 
 export interface ExportLanguageComponentData {
   languageName: string;
@@ -79,14 +80,69 @@ export class ExportLanguageComponent {
   }
 
   onExportClick(): void {
-    const fileName = this.fileName() || 'exported_language.json';
-    const blob = new Blob([JSON.stringify({ data: 'exported data' })], { type: 'application/json' });
+    const fileExtension = this.getFileExtension(this.fileExtension());
+    const fileContent = this.generateFileContent(this.fileExtension(), this.data.translations);
+    const fileName = this.fileName() || `exported_language.${fileExtension}`;
+    const finalFilename = fileName
+      ? fileName.includes(`.${fileExtension}`)
+        ? fileName
+        : `${fileName}.${fileExtension}`
+      : `${this.data.languageName}.${fileExtension}`;
+
+    const blob = new Blob([fileContent], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName;
+    a.download = finalFilename;
     a.click();
     URL.revokeObjectURL(url);
     this.dialogRef.close();
+  }
+
+  private getFileExtension(format: string): string {
+    const formatExtensionMap: Record<string, string> = {
+      arb: 'arb',
+      csv: 'csv',
+      ini: 'ini',
+      'keyvalue-json': 'json',
+      'i18next-json': 'json',
+      json: 'json',
+      po: 'po',
+      pot: 'pot',
+      mo: 'mo',
+      properties: 'properties',
+      resw: 'resw',
+      resx: 'resx',
+      ts: 'ts',
+      strings: 'strings',
+      xliff: 'xliff',
+      xcstrings: 'xcstrings',
+      'xlf-1': 'xlf',
+      xmb: 'xmb',
+      xtb: 'xtb',
+      'xlf-2': 'xlf',
+      'xlf-3': 'xlf',
+      xls: 'xls',
+      xlsx: 'xlsx',
+      xml: 'xml',
+      yml: 'yml',
+    };
+
+    return formatExtensionMap[format] || format;
+  }
+
+  private generateFileContent(format: string, translations: Translation[]): string {
+    switch (format) {
+      case 'json':
+      case 'keyvalue-json':
+      case 'arb':
+        return generateKeyValueJSON(translations);
+
+      case 'i18next-json':
+        return generateI18Next(translations);
+
+      default:
+        throw new Error(`Export format '${format}' is not yet implemented`);
+    }
   }
 }
