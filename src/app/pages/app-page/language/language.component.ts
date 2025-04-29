@@ -32,6 +32,7 @@ import { PaginatorIntlService } from '../../../../utils/paginator-intl.service';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 @Component({
   selector: 'app-language',
@@ -49,6 +50,7 @@ import { MatInputModule } from '@angular/material/input';
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
+    MatSortModule,
   ],
   template: `
     <mat-toolbar>
@@ -111,18 +113,30 @@ import { MatInputModule } from '@angular/material/input';
         <div
           [class]="
             'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
-            'relative min-h-[200px] overflow-auto'
+            'relative flex min-h-[200px] flex-col gap-2 overflow-auto'
           "
         >
-          <mat-form-field class="w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
-            <input matInput (keyup)="applyFilter($event)" placeholder="Search" />
-            <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
-          </mat-form-field>
-          <table mat-table [dataSource]="translations">
+          <mat-card appearance="raised">
+            <mat-card-content>
+              <mat-form-field class="compact w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
+                <input matInput (keyup)="applyFilter($event)" placeholder="Search" />
+                <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+
+          <table mat-table [dataSource]="translations" matSort>
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
               <td mat-cell *matCellDef="let row">
-                <b>{{ row.key }}</b>
+                <div class="flex flex-col items-start">
+                  <b>{{ row.key }}</b>
+                  @if (row.context && row.context.length > 0) {
+                    <span class="flex flex-row gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
+                      ><b>Context: </b>{{ row.context }}</span
+                    >
+                  }
+                </div>
               </td>
             </ng-container>
 
@@ -138,7 +152,7 @@ import { MatInputModule } from '@angular/material/input';
             </ng-container>
 
             <ng-container matColumnDef="tag">
-              <th mat-header-cell *matHeaderCellDef>Tag</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Tag</th>
               <td mat-cell *matCellDef="let row">
                 <span class="font-bold text-slate-400">{{ row.tag }}</span>
               </td>
@@ -190,6 +204,7 @@ export class LanguageComponent implements AfterViewInit {
   translations = new MatTableDataSource<Translation>([]);
   copied = signal<boolean>(false);
   @ViewChild(MatPaginator) paginator?: MatPaginator;
+  @ViewChild(MatSort) sort?: MatSort;
 
   private readonly supabaseService: SupabaseService = inject(SupabaseService);
   private readonly route = inject(ActivatedRoute);
@@ -221,6 +236,10 @@ export class LanguageComponent implements AfterViewInit {
   ngAfterViewInit() {
     if (this.paginator) {
       this.translations.paginator = this.paginator;
+      if (this.sort) {
+        this.sort.sortChange.subscribe(() => (this.paginator!.pageIndex = 0));
+        this.translations.sort = this.sort;
+      }
     }
   }
 

@@ -12,3 +12,8 @@
 .mat-column-controls {
   width: 40px;
 }
+
+.hide {
+  display: none;
+  height: 0;
+}
