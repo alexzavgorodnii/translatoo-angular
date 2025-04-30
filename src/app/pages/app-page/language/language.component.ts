@@ -18,10 +18,12 @@ import {
   CloudUpload,
   Copy,
   FilePenLine,
+  ListFilter,
   LucideAngularModule,
   PanelLeft,
   Plus,
   Search,
+  Tag,
 } from 'lucide-angular';
 import { generateI18Next, generateKeyValueJSON } from '../../../../utils/exporters/translation-exporters';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -116,14 +118,39 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
             'relative flex min-h-[200px] flex-col gap-2 overflow-auto'
           "
         >
-          <mat-card appearance="raised">
-            <mat-card-content>
-              <mat-form-field class="compact w-full max-w-[calc(400px)]" floatLabel="always" appearance="outline">
+          <mat-toolbar appearance="raised">
+            <div class="flex w-full flex-row items-center gap-2 py-5">
+              <mat-form-field class="compact w-full" floatLabel="always" appearance="outline">
                 <input matInput (keyup)="applyFilter($event)" placeholder="Search" />
                 <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
               </mat-form-field>
-            </mat-card-content>
-          </mat-card>
+              <button mat-button>
+                <span class="inline-flex flex-row items-center gap-1" [matMenuTriggerFor]="tag">
+                  <lucide-icon [img]="Tag" [size]="16"></lucide-icon>
+                  Tag
+                  <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
+                </span>
+              </button>
+              <mat-menu #tag="matMenu">
+                @for (tag of tags(); track $index) {
+                  <button mat-menu-item (click)="applyFilterByTag(tag)" [class.selected]="selectedTag() === tag">
+                    {{ tag }}
+                  </button>
+                }
+              </mat-menu>
+              <button mat-button>
+                <span class="inline-flex flex-row items-center gap-1" [matMenuTriggerFor]="filter">
+                  <lucide-icon [img]="ListFilter" [size]="16"></lucide-icon>
+                  All
+                  <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
+                </span>
+              </button>
+              <mat-menu #filter="matMenu">
+                <button mat-menu-item>All</button>
+                <button mat-menu-item>Untranslated</button>
+              </mat-menu>
+            </div>
+          </mat-toolbar>
 
           <table mat-table [dataSource]="translations" matSort>
             <ng-container matColumnDef="key">
@@ -152,7 +179,11 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
             </ng-container>
 
             <ng-container matColumnDef="tag">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Tag</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <div class="flex flex-row items-center gap-1">
+                  <lucide-icon [img]="Tag" [size]="16"></lucide-icon>Tag
+                </div>
+              </th>
               <td mat-cell *matCellDef="let row">
                 <span class="font-bold text-slate-400">{{ row.tag }}</span>
               </td>
@@ -195,6 +226,8 @@ export class LanguageComponent implements AfterViewInit {
   readonly Check = Check;
   readonly ChevronDown = ChevronDown;
   readonly Search = Search;
+  readonly ListFilter = ListFilter;
+  readonly Tag = Tag;
   readonly dialog = inject(MatDialog);
   private _snackBar = inject(MatSnackBar);
   language: LanguageWithTranslations | null = null;
@@ -203,6 +236,9 @@ export class LanguageComponent implements AfterViewInit {
   displayedColumns: string[] = ['key', 'value', 'tag', 'controls'];
   translations = new MatTableDataSource<Translation>([]);
   copied = signal<boolean>(false);
+  tags = signal<string[]>(['all']);
+  selectedTag = signal<string>('all');
+  filter = signal<string>('All');
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
@@ -223,6 +259,21 @@ export class LanguageComponent implements AfterViewInit {
         next: language => {
           this.language = language;
           this.translations.data = language.translations;
+          this.translations.filterPredicate = (data: Translation, filter: string) => {
+            if (filter === 'all') {
+              return true;
+            }
+            return data.tag === filter;
+          };
+          // find all unique tags
+          const uniqueTags = new Set<string>();
+          uniqueTags.add('all');
+          language.translations.forEach(translation => {
+            if (translation.tag) {
+              uniqueTags.add(translation.tag);
+            }
+          });
+          this.tags.set(Array.from(uniqueTags));
           this.title.set(language.name);
           this.loading.set(false);
         },
@@ -261,6 +312,11 @@ export class LanguageComponent implements AfterViewInit {
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.translations.filter = filterValue.trim().toLowerCase();
+  }
+
+  applyFilterByTag(tag: string) {
+    this.translations.filter = tag;
+    this.selectedTag.set(tag);
   }
 
   async handleCopyToClipboard(format: string) {

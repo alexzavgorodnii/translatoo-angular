@@ -114,3 +114,14 @@ html {
 .mat-mdc-form-field.compact .mat-mdc-form-field-subscript-wrapper {
   display: none;
 }
+
+.mat-mdc-menu-content .mat-mdc-menu-item {
+  min-height: 38px;
+}
+
+.mat-mdc-menu-item:not([disabled]).selected {
+  background-color: var(
+    --mat-menu-item-hover-state-layer-color,
+    color-mix(in srgb, var(--mat-sys-on-surface) calc(0.08 * 100%), transparent)
+  );
+}
