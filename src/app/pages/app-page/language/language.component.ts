@@ -35,6 +35,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { TranslationRowValueComponent } from './translation-row-value/translation-row-value.component';
 
 @Component({
   selector: 'app-language',
@@ -53,6 +54,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
     MatInputModule,
     FormsModule,
     MatSortModule,
+    TranslationRowValueComponent,
   ],
   template: `
     <mat-toolbar>
@@ -125,9 +127,13 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
                 <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
               </mat-form-field>
               <button mat-button>
-                <span class="inline-flex flex-row items-center gap-1" [matMenuTriggerFor]="tag">
+                <span class="inline-flex flex-row items-center gap-1 capitalize" [matMenuTriggerFor]="tag">
                   <lucide-icon [img]="Tag" [size]="16"></lucide-icon>
-                  Tag
+                  @if (selectedTag() !== 'all') {
+                    {{ selectedTag() }}
+                  } @else {
+                    <span>Tag</span>
+                  }
                   <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
                 </span>
               </button>
@@ -139,67 +145,71 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
                 }
               </mat-menu>
               <button mat-button>
-                <span class="inline-flex flex-row items-center gap-1" [matMenuTriggerFor]="filter">
+                <span class="inline-flex flex-row items-center gap-1 capitalize" [matMenuTriggerFor]="filter">
                   <lucide-icon [img]="ListFilter" [size]="16"></lucide-icon>
-                  All
+                  {{ selectedFilter() }}
                   <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
                 </span>
               </button>
               <mat-menu #filter="matMenu">
-                <button mat-menu-item>All</button>
-                <button mat-menu-item>Untranslated</button>
+                @for (filter of filters(); track $index) {
+                  <button
+                    mat-menu-item
+                    (click)="applyFilterByFilter(filter)"
+                    class="capitalize"
+                    [class.selected]="selectedFilter() === filter"
+                  >
+                    {{ filter }}
+                  </button>
+                }
               </mat-menu>
             </div>
           </mat-toolbar>
 
-          <table mat-table [dataSource]="translations" matSort>
+          <table mat-table [dataSource]="translations" matSort multiTemplateDataRows>
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
-              <td mat-cell *matCellDef="let row">
-                <div class="flex flex-col items-start">
-                  <b>{{ row.key }}</b>
-                  @if (row.context && row.context.length > 0) {
-                    <span class="flex flex-row gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
-                      ><b>Context: </b>{{ row.context }}</span
-                    >
-                  }
-                </div>
+              <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
+                <b>{{ row.key }}</b>
               </td>
             </ng-container>
 
             <ng-container matColumnDef="value">
               <th mat-header-cell *matHeaderCellDef>Value</th>
-              <td mat-cell *matCellDef="let row">
-                @if (row.temp_value) {
-                  <span class="font-bold text-gray-200">{{ row.temp_value }}</span>
-                } @else {
-                  {{ row.value }}
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="tag">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>
-                <div class="flex flex-row items-center gap-1">
-                  <lucide-icon [img]="Tag" [size]="16"></lucide-icon>Tag
-                </div>
-              </th>
-              <td mat-cell *matCellDef="let row">
-                <span class="font-bold text-slate-400">{{ row.tag }}</span>
+              <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
+                <app-translation-row-value [row]="row" />
               </td>
             </ng-container>
 
             <ng-container matColumnDef="controls">
               <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let row">
+              <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
                 <button mat-icon-button>
                   <lucide-icon [img]="FilePenLine" [size]="16"></lucide-icon>
                 </button>
               </td>
             </ng-container>
 
+            <ng-container matColumnDef="info">
+              <td mat-cell [attr.colspan]="displayedColumns.length" *matCellDef="let row">
+                <div class="flex flex-row items-start gap-2">
+                  @if (row.context) {
+                    <span class="flex flex-row gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
+                      ><b>Context: </b>{{ row.context }}</span
+                    >
+                  }
+                  @if (row.tag) {
+                    <span class="flex flex-row items-center gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
+                      ><lucide-icon [img]="Tag" [size]="10"></lucide-icon><b>Tag: </b>{{ row.tag }}</span
+                    >
+                  }
+                </div>
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            <tr class="h-[38px]!" mat-row *matRowDef="let row; columns: ['info']; when: hasContext"></tr>
           </table>
         </div>
 
@@ -233,12 +243,13 @@ export class LanguageComponent implements AfterViewInit {
   language: LanguageWithTranslations | null = null;
   loading = signal<boolean>(false);
   title = signal<string>('Language');
-  displayedColumns: string[] = ['key', 'value', 'tag', 'controls'];
+  displayedColumns: string[] = ['key', 'value', 'controls'];
   translations = new MatTableDataSource<Translation>([]);
   copied = signal<boolean>(false);
   tags = signal<string[]>(['all']);
   selectedTag = signal<string>('all');
-  filter = signal<string>('All');
+  filters = signal<string[]>(['all', 'untranslated']);
+  selectedFilter = signal<string>('all');
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
@@ -262,6 +273,9 @@ export class LanguageComponent implements AfterViewInit {
           this.translations.filterPredicate = (data: Translation, filter: string) => {
             if (filter === 'all') {
               return true;
+            }
+            if (filter === 'untranslated') {
+              return !data.value || data.value.trim() === '';
             }
             return data.tag === filter;
           };
@@ -314,6 +328,11 @@ export class LanguageComponent implements AfterViewInit {
     this.translations.filter = filterValue.trim().toLowerCase();
   }
 
+  applyFilterByFilter(tag: string) {
+    this.translations.filter = tag;
+    this.selectedFilter.set(tag);
+  }
+
   applyFilterByTag(tag: string) {
     this.translations.filter = tag;
     this.selectedTag.set(tag);
@@ -353,5 +372,9 @@ export class LanguageComponent implements AfterViewInit {
       });
       console.error('Failed to copy: ', error);
     }
+  }
+
+  hasContext(index: number, row: Translation): boolean {
+    return !!row.context || !!row.tag;
   }
 }

@@ -6,10 +6,20 @@
 .mat-mdc-header-cell {
   font-weight: bold;
 }
+.mat-column-key.no-border,
+.mat-column-controls.no-border,
+.mat-column-value.no-border,
+.mat-column-tag.no-border {
+  border: none;
+}
 .mat-column-key {
   width: 300px;
 }
 .mat-column-controls {
+  width: 40px;
+}
+
+.mat-column-info {
   width: 40px;
 }
 
