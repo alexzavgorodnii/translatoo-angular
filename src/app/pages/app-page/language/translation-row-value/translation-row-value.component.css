@@ -1,3 +1,13 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.edit-button {
+  display: none;
+  cursor: pointer;
+}
+:host:hover .edit-button {
+  display: inline-block;
 }

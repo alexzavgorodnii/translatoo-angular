@@ -253,4 +253,23 @@ export class SupabaseService {
       });
     });
   }
+
+  updateTranslationValue(id: number, value: string): Observable<Translation> {
+    return new Observable(observer => {
+      this.supabase
+        .from('translation')
+        .update({ value, temp_value: null })
+        .eq('id', id)
+        .select()
+        .single()
+        .then(response => {
+          if (response.error) {
+            observer.error(response.error);
+          } else {
+            observer.next(response.data as Translation);
+            observer.complete();
+          }
+        });
+    });
+  }
 }
