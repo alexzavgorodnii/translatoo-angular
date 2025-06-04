@@ -52,7 +52,7 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css", "src/styles/theme.css"],
+            "styles": ["src/styles.css", "src/styles/theme.css", "src/styles/theme-own.css"],
             "scripts": []
           },
           "configurations": {

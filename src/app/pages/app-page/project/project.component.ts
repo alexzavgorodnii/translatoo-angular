@@ -51,7 +51,7 @@ import { ProjectsService } from '../../../../services/projects.service';
       } @else {
         <mat-list>
           @for (language of project().languages; track language.id) {
-            <mat-card appearance="raised">
+            <mat-card appearance="raised" class="mb-4">
               <mat-card-content>
                 <mat-list-item>
                   <div matListItemTitle>

@@ -56,7 +56,7 @@ import { User } from '@supabase/supabase-js';
           <p>All your data, history, and preferences will be permanently deleted.</p>
         </mat-card-content>
         <mat-card-actions class="mt-4 gap-2">
-          <button mat-flat-button color="warn">Delete Account</button>
+          <button mat-flat-button class="warn-button">Delete Account</button>
         </mat-card-actions>
       </mat-card>
     </div>
