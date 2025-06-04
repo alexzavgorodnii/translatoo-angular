@@ -35,6 +35,7 @@ export class AuthService extends SupabaseAuthApi {
       this.supabase.auth
         .signOut()
         .then(() => {
+          this.user = null;
           observer.next();
           observer.complete();
         })

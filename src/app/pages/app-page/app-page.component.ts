@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { Folder, LucideAngularModule, LayoutDashboard, UserCog, Users } from 'lucide-angular';
+import { Folder, LucideAngularModule, LayoutDashboard, UserCog, Users, LogOut } from 'lucide-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-app-page',
@@ -48,7 +49,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
             </mat-nav-list>
           </div>
           <div class="flex-grow"></div>
-          <div>
+          <div class="flex flex-col">
             <mat-divider></mat-divider>
             <mat-nav-list class="!p-3">
               <a
@@ -61,6 +62,12 @@ import { MatToolbarModule } from '@angular/material/toolbar';
               >
                 <lucide-icon matListItemIcon [img]="UserCog" [size]="16"></lucide-icon>
                 <span matListItemTitle>Go to profile</span>
+              </a>
+            </mat-nav-list>
+            <mat-nav-list class="!p-3">
+              <a mat-list-item (click)="logoutClickHandler()" color="warn">
+                <lucide-icon [img]="LogOut" [size]="16" matListItemIcon></lucide-icon>
+                <span matListItemTitle>Logout</span>
               </a>
             </mat-nav-list>
           </div>
@@ -95,14 +102,27 @@ export class AppPageComponent {
       enabled: false,
     },
   ];
+  authService = inject(AuthService);
   private router = inject(Router);
   readonly Folder = Folder;
   readonly LayoutDashboard = LayoutDashboard;
   readonly UserCog = UserCog;
   readonly Users = Users;
+  readonly LogOut = LogOut;
 
   isLinkActive(url: string): boolean {
     const baseUrl = this.router.url;
     return baseUrl.indexOf(url) !== -1;
+  }
+
+  logoutClickHandler(): void {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/sign-in']);
+      },
+      error: error => {
+        console.error('Logout failed', error);
+      },
+    });
   }
 }
