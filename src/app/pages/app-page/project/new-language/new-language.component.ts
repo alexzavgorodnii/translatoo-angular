@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { SupabaseService } from '../../../../../services/supabase.service';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { ProjectWithLanguages } from '../../../../../models/projects';
@@ -19,6 +18,9 @@ import { MatCardModule } from '@angular/material/card';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { parseJSON, parseI18Next } from '../../../../../utils/parsers/translation-parsers';
+import { ProjectsService } from '../../../../../services/projects.service';
+import { LanguagesService } from '../../../../../services/languages.service';
+import { TranslationsService } from '../../../../../services/translations.service';
 
 @Component({
   selector: 'app-new-language',
@@ -151,9 +153,12 @@ export class NewLanguageComponent {
     name: '',
     languages: [],
   });
-  readonly supabaseService = inject(SupabaseService);
-  private stateService: StateService = inject(StateService);
-  private readonly router: Router = inject(Router);
+  private readonly languagesService = inject(LanguagesService);
+  private readonly projectsService = inject(ProjectsService);
+  private readonly translationsService = inject(TranslationsService);
+  private stateService = inject(StateService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly name = model('');
   readonly appType = model('');
   readonly copy = model('no');
@@ -161,7 +166,6 @@ export class NewLanguageComponent {
   readonly languageId = model('');
   readonly selectedJsonFormat = model('keyvalue-json');
   readonly showJsonFormatSelector = signal<boolean>(false);
-  private readonly route = inject(ActivatedRoute);
   selectedFile: File | null = null;
 
   constructor() {
@@ -172,7 +176,7 @@ export class NewLanguageComponent {
         console.error('No project ID provided in the route.');
         return;
       }
-      this.supabaseService
+      this.projectsService
         .getProject(id)
         .pipe(takeUntilDestroyed())
         .subscribe({
@@ -209,7 +213,7 @@ export class NewLanguageComponent {
 
     // Handle file import
     if (this.copy() === 'file' && this.selectedFile) {
-      this.supabaseService
+      this.languagesService
         .addLanguage(this.name(), this.project().id)
         .pipe(take(1))
         .subscribe({
@@ -234,14 +238,14 @@ export class NewLanguageComponent {
     }
 
     // Rest of the existing code for other options
-    this.supabaseService
+    this.languagesService
       .addLanguage(this.name(), this.project().id)
       .pipe(take(1))
       .subscribe({
         next: language => {
           if (this.copy() === 'language') {
             // Existing code for copying from language...
-            this.supabaseService
+            this.languagesService
               .getLanguage(this.languageId())
               .pipe(take(1))
               .subscribe({
@@ -259,7 +263,7 @@ export class NewLanguageComponent {
                       language_id: language.id,
                     };
                   });
-                  this.supabaseService
+                  this.translationsService
                     .addTranslations(translationsFromLanguage)
                     .pipe(take(1))
                     .subscribe({
@@ -351,7 +355,7 @@ export class NewLanguageComponent {
       if (translationsToAdd.length > 0) {
         // Add translations to database
         return new Promise<void>((resolve, reject) => {
-          this.supabaseService
+          this.translationsService
             .addTranslations(translationsToAdd)
             .pipe(take(1))
             .subscribe({

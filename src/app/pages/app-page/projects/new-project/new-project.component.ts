@@ -4,7 +4,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogRef } from '@angular/material/dialog';
-import { SupabaseService } from '../../../../../services/supabase.service';
+import { ProjectsService } from '../../../../../services/projects.service';
 
 @Component({
   selector: 'app-new-project',
@@ -38,16 +38,16 @@ import { SupabaseService } from '../../../../../services/supabase.service';
 })
 export class NewProjectComponent {
   readonly dialogRef = inject(MatDialogRef<NewProjectComponent>);
-  readonly supabaseService = inject(SupabaseService);
   readonly name = model('');
   readonly project = model({});
+  private readonly projectsService = inject(ProjectsService);
 
   onCancelClick(): void {
     this.dialogRef.close();
   }
 
   onAddClick(): void {
-    const req = this.supabaseService.addProject(this.name()).subscribe({
+    const req = this.projectsService.addProject(this.name()).subscribe({
       next: project => {
         this.project.set(project);
         this.dialogRef.close(this.project());

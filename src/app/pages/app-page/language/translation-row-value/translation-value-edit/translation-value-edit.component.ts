@@ -10,9 +10,9 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { SupabaseService } from '../../../../../../services/supabase.service';
 import { take } from 'rxjs/internal/operators/take';
 import { Translation } from '../../../../../../models/translations';
+import { TranslationsService } from '../../../../../../services/translations.service';
 
 export interface TranslationValueEditComponentData {
   id: number;
@@ -74,14 +74,14 @@ export class TranslationValueEditComponent {
   updateInProgress = signal(false);
   error = signal<boolean>(false);
   readonly dialogRef = inject(MatDialogRef<TranslationValueEditComponent>);
-  private readonly supabaseService = inject(SupabaseService);
+  private readonly translationsService = inject(TranslationsService);
 
   onCancelClick(): void {
     this.dialogRef.close(null);
   }
   onSaveClick(): void {
     this.updateInProgress.set(true);
-    this.supabaseService
+    this.translationsService
       .updateTranslationValue(this.data.id!, this.data.value)
       .pipe(take(1))
       .subscribe({

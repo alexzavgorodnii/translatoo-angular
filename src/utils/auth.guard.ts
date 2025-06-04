@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
-import { SupabaseService } from '../services/supabase.service';
 import { map } from 'rxjs/internal/operators/map';
+import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  return inject(SupabaseService)
+  return inject(AuthService)
     .isAuth()
     .pipe(
       map(isAuth => {

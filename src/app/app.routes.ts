@@ -13,6 +13,11 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        title: 'Profile | Translatoo',
+        path: 'profile',
+        loadComponent: () => import('./pages/app-page/profile/profile.component').then(m => m.ProfileComponent),
+      },
+      {
         title: 'Dashboard | Translatoo',
         path: 'dashboard',
         loadComponent: () => import('./pages/app-page/dashboard/dashboard.component').then(m => m.DashboardComponent),

@@ -29,49 +29,22 @@ import { MatToolbarModule } from '@angular/material/toolbar';
             </mat-toolbar>
             <mat-divider></mat-divider>
             <mat-nav-list class="!p-3">
-              @if (false) {
-                <a
-                  mat-list-item
-                  class="mb-2"
-                  routerLink="/dashboard"
-                  routerLinkActive="active"
-                  #rlaDashboard="routerLinkActive"
-                  [activated]="rlaDashboard.isActive"
-                  [routerLinkActiveOptions]="{ exact: true }"
-                >
-                  <lucide-icon matListItemIcon [img]="LayoutDashboard" [size]="16"></lucide-icon>
-                  <span matListItemTitle>Dashboard</span>
-                </a>
+              @for (item of navigationLinks; track $index) {
+                @if (item.enabled) {
+                  <a
+                    mat-list-item
+                    class="mb-2"
+                    [routerLink]="item.link"
+                    routerLinkActive="active"
+                    #rlaItem="routerLinkActive"
+                    [activated]="rlaItem.isActive"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                  >
+                    <lucide-icon matListItemIcon [img]="item.icon" [size]="16"></lucide-icon>
+                    <span matListItemTitle>{{ item.title }}</span>
+                  </a>
+                }
               }
-
-              <a
-                mat-list-item
-                class="mb-2"
-                routerLink="/projects"
-                routerLinkActive="active"
-                #rlaProjects="routerLinkActive"
-                [activated]="
-                  isLinkActive('/projects') ||
-                  rlaProjects.isActive ||
-                  isLinkActive('/languages') ||
-                  isLinkActive('/new-language')
-                "
-                [routerLinkActiveOptions]="{ exact: true }"
-              >
-                <lucide-icon matListItemIcon [img]="Folder" [size]="16"></lucide-icon>
-                <span matListItemTitle>Projects</span>
-              </a>
-              <a
-                mat-list-item
-                routerLink="/collaborators"
-                routerLinkActive="active"
-                #rlaCollaborators="routerLinkActive"
-                [activated]="rlaCollaborators.isActive"
-                [routerLinkActiveOptions]="{ exact: true }"
-              >
-                <lucide-icon matListItemIcon [img]="Users" [size]="16"></lucide-icon>
-                <span matListItemTitle>Collaborators</span>
-              </a>
             </mat-nav-list>
           </div>
           <div class="flex-grow"></div>
@@ -102,7 +75,27 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppPageComponent {
-  private router: Router = inject(Router);
+  navigationLinks = [
+    {
+      title: 'Dashboard',
+      icon: LayoutDashboard,
+      link: '/dashboard',
+      enabled: false,
+    },
+    {
+      title: 'Projects',
+      icon: Folder,
+      link: '/projects',
+      enabled: true,
+    },
+    {
+      title: 'Collaborators',
+      icon: Users,
+      link: '/collaborators',
+      enabled: false,
+    },
+  ];
+  private router = inject(Router);
   readonly Folder = Folder;
   readonly LayoutDashboard = LayoutDashboard;
   readonly UserCog = UserCog;

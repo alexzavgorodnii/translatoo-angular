@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostBinding, inject } from '@angular/core';
-import { SupabaseService } from '../../../services/supabase.service';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
+import { AuthService } from '../../../services/auth.service';
 @Component({
   selector: 'app-sign-in',
   imports: [MatCardModule],
@@ -26,11 +26,11 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class SignInComponent {
   @HostBinding('class') class = 'flex w-full h-screen items-center justify-center bg-gray-100 dark:bg-gray-900';
-  private readonly supabaseService: SupabaseService = inject(SupabaseService);
-  private readonly router: Router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   constructor() {
-    this.supabaseService.isAuth().subscribe({
+    this.authService.isAuth().subscribe({
       next: isAuth => {
         if (isAuth) {
           this.router.navigate(['/dashboard']);
@@ -43,7 +43,7 @@ export class SignInComponent {
   }
 
   googleLogin() {
-    this.supabaseService.googleLogin().subscribe({
+    this.authService.googleLogin().subscribe({
       next: () => {
         this.router.navigate(['/']);
       },

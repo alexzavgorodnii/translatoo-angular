@@ -12,7 +12,6 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ArrowRight, LucideAngularModule, PanelLeft, Plus, X } from 'lucide-angular';
 import { ProjectWithLanguages } from '../../../../../models/projects';
 import { StateService } from '../../../../store/state.service';
-import { SupabaseService } from '../../../../../services/supabase.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LanguageWithTranslations } from '../../../../../models/languages';
 import { take } from 'rxjs/internal/operators/take';
@@ -32,6 +31,9 @@ import {
 } from './import-confirmation/import-confirmation.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { LanguagesService } from '../../../../../services/languages.service';
+import { ProjectsService } from '../../../../../services/projects.service';
+import { TranslationsService } from '../../../../../services/translations.service';
 
 @Component({
   selector: 'app-import-language',
@@ -284,8 +286,10 @@ export class ImportLanguageComponent {
   readonly selectedFormat = model('keyvalue-json');
   readonly tag = model('');
 
-  private readonly stateService: StateService = inject(StateService);
-  private readonly supabaseService: SupabaseService = inject(SupabaseService);
+  private readonly stateService = inject(StateService);
+  private readonly languagesService = inject(LanguagesService);
+  private readonly projectsService = inject(ProjectsService);
+  private readonly translationsService = inject(TranslationsService);
   private readonly route = inject(ActivatedRoute);
   private readonly _snackBar = inject(MatSnackBar);
 
@@ -297,7 +301,7 @@ export class ImportLanguageComponent {
       this.error.set(true);
       return;
     }
-    this.supabaseService
+    this.languagesService
       .getLanguage(id)
       .pipe(takeUntilDestroyed())
       .subscribe({
@@ -305,7 +309,7 @@ export class ImportLanguageComponent {
           this.language.set(language);
           this.stateService.language = language;
           this.loadingLanguage.set(false);
-          this.supabaseService
+          this.projectsService
             .getProject(language.project_id)
             .pipe(take(1))
             .subscribe({
@@ -423,7 +427,7 @@ export class ImportLanguageComponent {
         order: t.order,
       }));
 
-      this.supabaseService
+      this.translationsService
         .importScriptTranslations(
           this.language().id,
           this.newTranslations(),

@@ -1,5 +1,4 @@
-import { Component, inject } from '@angular/core';
-import { MatIconRegistry } from '@angular/material/icon';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -8,9 +7,4 @@ import { RouterOutlet } from '@angular/router';
   template: ` <router-outlet /> `,
   styleUrl: './app.component.css',
 })
-export class AppComponent {
-  private iconRegistry: MatIconRegistry = inject(MatIconRegistry);
-  constructor() {
-    this.iconRegistry.setDefaultFontSetClass('material-symbols-rounded');
-  }
-}
+export class AppComponent {}

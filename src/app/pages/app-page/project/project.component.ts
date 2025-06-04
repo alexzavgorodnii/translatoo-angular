@@ -3,7 +3,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { SupabaseService } from '../../../../services/supabase.service';
 import { ProjectWithLanguages } from '../../../../models/projects';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -12,6 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
 import { MatDialog } from '@angular/material/dialog';
 import { StateService } from '../../../store/state.service';
+import { ProjectsService } from '../../../../services/projects.service';
 
 @Component({
   selector: 'app-project',
@@ -88,8 +88,8 @@ export class ProjectComponent {
   readonly dialog = inject(MatDialog);
   readonly PanelLeft = PanelLeft;
   readonly Plus = Plus;
-  private supabaseService: SupabaseService = inject(SupabaseService);
-  private stateService: StateService = inject(StateService);
+  private projectsService = inject(ProjectsService);
+  private stateService = inject(StateService);
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
@@ -99,7 +99,7 @@ export class ProjectComponent {
       this.loading.set(false);
       return;
     }
-    this.supabaseService
+    this.projectsService
       .getProject(id)
       .pipe(takeUntilDestroyed())
       .subscribe({

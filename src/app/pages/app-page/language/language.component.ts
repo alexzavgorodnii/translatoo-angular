@@ -6,7 +6,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { LanguageWithTranslations } from '../../../../models/languages';
-import { SupabaseService } from '../../../../services/supabase.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -36,6 +35,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { TranslationRowValueComponent } from './translation-row-value/translation-row-value.component';
+import { LanguagesService } from '../../../../services/languages.service';
 
 @Component({
   selector: 'app-language',
@@ -253,7 +253,7 @@ export class LanguageComponent implements AfterViewInit {
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
-  private readonly supabaseService: SupabaseService = inject(SupabaseService);
+  private readonly languagesService = inject(LanguagesService);
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
@@ -263,7 +263,7 @@ export class LanguageComponent implements AfterViewInit {
       this.loading.set(false);
       return;
     }
-    this.supabaseService
+    this.languagesService
       .getLanguage(id)
       .pipe(takeUntilDestroyed())
       .subscribe({

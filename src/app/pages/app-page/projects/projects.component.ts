@@ -6,12 +6,12 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { SupabaseService } from '../../../../services/supabase.service';
 import { Project } from '../../../../models/projects';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule, PanelLeft, Plus } from 'lucide-angular';
 import { MatDialog } from '@angular/material/dialog';
 import { NewProjectComponent } from './new-project/new-project.component';
+import { ProjectsService } from '../../../../services/projects.service';
 
 @Component({
   selector: 'app-projects',
@@ -74,10 +74,10 @@ export class ProjectsComponent {
   readonly PanelLeft = PanelLeft;
   readonly Plus = Plus;
   readonly dialog = inject(MatDialog);
-  private supabaseService: SupabaseService = inject(SupabaseService);
+  private projectsService = inject(ProjectsService);
 
   constructor() {
-    this.supabaseService
+    this.projectsService
       .getProjects()
       .pipe(takeUntilDestroyed())
       .subscribe({
