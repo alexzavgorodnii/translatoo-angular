@@ -29,7 +29,7 @@ import { AuthService } from '../../../services/auth.service';
               <span>Translatoo</span>
             </mat-toolbar>
             <mat-divider></mat-divider>
-            <mat-nav-list class="!p-3">
+            <mat-nav-list class="!px-3">
               @for (item of navigationLinks; track $index) {
                 @if (item.enabled) {
                   <a
@@ -50,8 +50,7 @@ import { AuthService } from '../../../services/auth.service';
           </div>
           <div class="flex-grow"></div>
           <div class="flex flex-col">
-            <mat-divider></mat-divider>
-            <mat-nav-list class="!p-3">
+            <mat-nav-list class="!px-3">
               <a
                 mat-list-item
                 routerLink="/profile"
@@ -64,7 +63,7 @@ import { AuthService } from '../../../services/auth.service';
                 <span matListItemTitle>Go to profile</span>
               </a>
             </mat-nav-list>
-            <mat-nav-list class="!p-3">
+            <mat-nav-list class="!px-3">
               <a mat-list-item (click)="logoutClickHandler()" color="warn">
                 <lucide-icon [img]="LogOut" [size]="16" matListItemIcon></lucide-icon>
                 <span matListItemTitle>Logout</span>
@@ -109,11 +108,6 @@ export class AppPageComponent {
   readonly UserCog = UserCog;
   readonly Users = Users;
   readonly LogOut = LogOut;
-
-  isLinkActive(url: string): boolean {
-    const baseUrl = this.router.url;
-    return baseUrl.indexOf(url) !== -1;
-  }
 
   logoutClickHandler(): void {
     this.authService.logout().subscribe({

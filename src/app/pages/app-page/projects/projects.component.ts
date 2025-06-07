@@ -69,6 +69,7 @@ import { ProjectsService } from '../../../../services/projects.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsComponent {
+  // TODO refactor: to use async pipe in template
   projects = signal<Project[]>([]);
   loading = signal<boolean>(true);
   readonly PanelLeft = PanelLeft;
