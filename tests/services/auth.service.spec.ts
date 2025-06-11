@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { AuthService } from '../../src/services/auth.service';
+import { AuthService } from '../../src/app/core/services/auth.service';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 jest.mock('@supabase/supabase-js', () => {

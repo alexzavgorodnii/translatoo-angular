@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { LanguagesService } from '../../src/services/languages.service';
-import { Language } from '../../src/models/languages';
+import { LanguagesService } from '../../src/app/features/language/services/languages.service';
+import { Language } from '../../src/app/core/models/languages';
 
 jest.mock('@supabase/supabase-js', () => {
   const actual = jest.requireActual('@supabase/supabase-js');

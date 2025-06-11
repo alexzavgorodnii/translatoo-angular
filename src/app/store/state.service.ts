@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { ProjectWithLanguages } from '../../models/projects';
-import { LanguageWithTranslations } from '../../models/languages';
+import { ProjectWithLanguages } from '../core/models/projects';
+import { LanguageWithTranslations } from '../core/models/languages';
 
 @Injectable({
   providedIn: 'root',
