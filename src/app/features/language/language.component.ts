@@ -36,8 +36,8 @@ import { TranslationRowValueComponent } from './components/translation-row-value
 import { EditTranslationKeyDialogComponent } from './components/edit-translation-key-dialog/edit-translation-key-dialog.component';
 import { take } from 'rxjs/internal/operators/take';
 import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadcrumbs.component';
-import { Breadcrumb } from '../../core/models/breadcrumbs';
 import { ProjectsService } from '../projects/services/projects.service';
+import { Project } from '../../core/models/projects';
 
 @Component({
   selector: 'app-language',
@@ -60,11 +60,17 @@ import { ProjectsService } from '../projects/services/projects.service';
   ],
   template: `
     <mat-toolbar>
-      <app-breadcrumbs [breadcrumbs]="breadcrumbs()" />
+      <app-breadcrumbs
+        [breadcrumbs]="[
+          { title: 'Projects', route: ['/', 'projects'], type: 'link' },
+          { title: project().name, route: ['/', 'projects', language().project_id], type: 'link' },
+          { title: language().name, type: 'title' },
+        ]"
+      />
       <div class="flex-grow"></div>
       @if (!loading()) {
         <div class="flex flex-row gap-2">
-          <a mat-button [routerLink]="['/', 'languages', language()?.id, 'import']">
+          <a mat-button [routerLink]="['/', 'languages', language().id, 'import']">
             <span class="inline-flex flex-row items-center gap-1">
               <lucide-icon [img]="CloudUpload" [size]="16"></lucide-icon>
               Import
@@ -228,7 +234,20 @@ export class LanguageComponent implements AfterViewInit {
   readonly Tag = Tag;
   readonly dialog = inject(MatDialog);
   private _snackBar = inject(MatSnackBar);
-  language = signal<LanguageWithTranslations | null>(null);
+  language = signal<LanguageWithTranslations>({
+    id: '',
+    name: 'Loading...',
+    project_id: '',
+    created_at: '',
+    format: '',
+    app_type: '',
+    translations: [],
+  });
+  project = signal<Project>({
+    id: '',
+    created_at: '',
+    name: 'Loading...',
+  });
   loading = signal<boolean>(false);
   displayedColumns: string[] = ['key', 'value', 'controls'];
   translations = new MatTableDataSource<Translation>([]);
@@ -237,7 +256,6 @@ export class LanguageComponent implements AfterViewInit {
   selectedTag = signal<string>('all');
   filters = signal<string[]>(['all', 'untranslated']);
   selectedFilter = signal<string>('all');
-  breadcrumbs = signal<Breadcrumb[]>([{ title: 'Projects', route: ['/', 'projects'], type: 'link' }]);
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
@@ -262,13 +280,7 @@ export class LanguageComponent implements AfterViewInit {
             .getProject(language.project_id)
             .pipe(take(1))
             .subscribe({
-              next: project => {
-                this.breadcrumbs.set([
-                  ...this.breadcrumbs(),
-                  { title: project.name, route: ['/', 'projects', language.project_id], type: 'link' },
-                  { title: language.name, type: 'title' },
-                ]);
-              },
+              next: project => this.project.set(project),
               error: error => {
                 console.error('Error loading project:', error);
               },
