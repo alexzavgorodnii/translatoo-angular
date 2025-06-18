@@ -1,0 +1,10 @@
+.full-height-right-dialog .mat-mdc-dialog-surface {
+  border-radius: var(--mdc-dialog-container-shape, var(--mat-sys-corner-extra-large, 4px)) 0 0
+    var(--mdc-dialog-container-shape, var(--mat-sys-corner-extra-large, 4px));
+}
+
+.full-height-right-dialog .mat-mdc-dialog-content {
+  max-height: calc(100vh - 69px - 68px);
+  height: calc(100vh - 69px - 68px);
+  overflow-y: auto;
+}

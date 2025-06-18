@@ -38,6 +38,7 @@ import { take } from 'rxjs/internal/operators/take';
 import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadcrumbs.component';
 import { ProjectsService } from '../projects/services/projects.service';
 import { Project } from '../../core/models/projects';
+import { EmptyMessageComponent } from '../../shared/components/empty-message/empty-message.component';
 
 @Component({
   selector: 'app-language',
@@ -57,6 +58,7 @@ import { Project } from '../../core/models/projects';
     MatSortModule,
     TranslationRowValueComponent,
     BreadcrumbsComponent,
+    EmptyMessageComponent,
   ],
   template: `
     <mat-toolbar>
@@ -110,111 +112,125 @@ import { Project } from '../../core/models/projects';
       @if (loading()) {
         <mat-progress-bar mode="query"></mat-progress-bar>
       } @else {
-        <div
-          [class]="
-            'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
-            'relative flex min-h-[200px] flex-col gap-2 overflow-auto'
-          "
-        >
-          <mat-toolbar appearance="raised">
-            <div class="flex w-full flex-row items-center gap-2 py-5">
-              <mat-form-field class="compact w-full" floatLabel="always" appearance="outline">
-                <input matInput (keyup)="applyFilter($event)" placeholder="Search" />
-                <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
-              </mat-form-field>
-              <button mat-button>
-                <span class="inline-flex flex-row items-center gap-1 capitalize" [matMenuTriggerFor]="tag">
-                  <lucide-icon [img]="Tag" [size]="16"></lucide-icon>
-                  @if (selectedTag() !== 'all') {
-                    {{ selectedTag() }}
-                  } @else {
-                    <span>Tag</span>
-                  }
-                  <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
-                </span>
-              </button>
-              <mat-menu #tag="matMenu">
-                @for (tag of tags(); track $index) {
-                  <button mat-menu-item (click)="applyFilterByTag(tag)" [class.selected]="selectedTag() === tag">
-                    {{ tag }}
-                  </button>
-                }
-              </mat-menu>
-              <button mat-button>
-                <span class="inline-flex flex-row items-center gap-1 capitalize" [matMenuTriggerFor]="filter">
-                  <lucide-icon [img]="ListFilter" [size]="16"></lucide-icon>
-                  {{ selectedFilter() }}
-                  <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
-                </span>
-              </button>
-              <mat-menu #filter="matMenu">
-                @for (filter of filters(); track $index) {
-                  <button
-                    mat-menu-item
-                    (click)="applyFilterByFilter(filter)"
-                    class="capitalize"
-                    [class.selected]="selectedFilter() === filter"
-                  >
-                    {{ filter }}
-                  </button>
-                }
-              </mat-menu>
-            </div>
-          </mat-toolbar>
-
-          <table mat-table [dataSource]="translations" matSort multiTemplateDataRows>
-            <ng-container matColumnDef="key">
-              <th mat-header-cell *matHeaderCellDef>Key</th>
-              <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
-                <b>{{ row.key }}</b>
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="value">
-              <th mat-header-cell *matHeaderCellDef>Value</th>
-              <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
-                <app-translation-row-value [row]="row" />
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="controls">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
-                <button mat-icon-button (click)="openEditTranslationKeyDialog(row)">
-                  <lucide-icon [img]="FilePenLine" [size]="16"></lucide-icon>
+        @if (translations.data.length === 0) {
+          <app-empty-message
+            [title]="'No translations found for ' + language().name + '.'"
+            [message]="'You can import translations using the button below.'"
+          >
+            <a mat-button [routerLink]="['/', 'languages', language().id, 'import']">
+              <span class="inline-flex flex-row items-center gap-1">
+                <lucide-icon [img]="CloudUpload" [size]="16"></lucide-icon>
+                Import
+              </span>
+            </a>
+          </app-empty-message>
+        } @else {
+          <div
+            [class]="
+              'max-h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-paginator-container-size)-80px)] ' +
+              'relative flex min-h-[200px] flex-col gap-2 overflow-auto'
+            "
+          >
+            <mat-toolbar appearance="raised">
+              <div class="flex w-full flex-row items-center gap-2 py-5">
+                <mat-form-field class="compact w-full" floatLabel="always" appearance="outline">
+                  <input matInput (keyup)="applyFilter($event)" placeholder="Search" />
+                  <lucide-icon class="mr-2 ml-4" matPrefix [img]="Search" [size]="16"></lucide-icon>
+                </mat-form-field>
+                <button mat-button>
+                  <span class="inline-flex flex-row items-center gap-1 capitalize" [matMenuTriggerFor]="tag">
+                    <lucide-icon [img]="Tag" [size]="16"></lucide-icon>
+                    @if (selectedTag() !== 'all') {
+                      {{ selectedTag() }}
+                    } @else {
+                      <span>Tag</span>
+                    }
+                    <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
+                  </span>
                 </button>
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="info">
-              <td mat-cell [attr.colspan]="displayedColumns.length" *matCellDef="let row">
-                <div class="flex flex-row items-start gap-2">
-                  @if (row.context) {
-                    <span class="flex flex-row gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
-                      ><b>Context: </b>{{ row.context }}</span
-                    >
+                <mat-menu #tag="matMenu">
+                  @for (tag of tags(); track $index) {
+                    <button mat-menu-item (click)="applyFilterByTag(tag)" [class.selected]="selectedTag() === tag">
+                      {{ tag }}
+                    </button>
                   }
-                  @if (row.tag) {
-                    <span class="flex flex-row items-center gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
-                      ><lucide-icon [img]="Tag" [size]="10"></lucide-icon><b>Tag: </b>{{ row.tag }}</span
+                </mat-menu>
+                <button mat-button>
+                  <span class="inline-flex flex-row items-center gap-1 capitalize" [matMenuTriggerFor]="filter">
+                    <lucide-icon [img]="ListFilter" [size]="16"></lucide-icon>
+                    {{ selectedFilter() }}
+                    <lucide-icon [img]="ChevronDown" [size]="16"></lucide-icon>
+                  </span>
+                </button>
+                <mat-menu #filter="matMenu">
+                  @for (filter of filters(); track $index) {
+                    <button
+                      mat-menu-item
+                      (click)="applyFilterByFilter(filter)"
+                      class="capitalize"
+                      [class.selected]="selectedFilter() === filter"
                     >
+                      {{ filter }}
+                    </button>
                   }
-                </div>
-              </td>
-            </ng-container>
+                </mat-menu>
+              </div>
+            </mat-toolbar>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            <tr class="h-[38px]!" mat-row *matRowDef="let row; columns: ['info']; when: hasContext"></tr>
-          </table>
-        </div>
+            <table mat-table [dataSource]="translations" matSort multiTemplateDataRows>
+              <ng-container matColumnDef="key">
+                <th mat-header-cell *matHeaderCellDef>Key</th>
+                <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
+                  <b>{{ row.key }}</b>
+                </td>
+              </ng-container>
 
-        <mat-paginator
-          [length]="translations.data.length"
-          [pageSize]="20"
-          [showFirstLastButtons]="true"
-          aria-label="Select page of GitHub search results"
-        ></mat-paginator>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Value</th>
+                <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
+                  <app-translation-row-value [row]="row" />
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="controls">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td [class.no-border]="!!row.context || !!row.tag" mat-cell *matCellDef="let row">
+                  <button mat-icon-button (click)="openEditTranslationKeyDialog(row)">
+                    <lucide-icon [img]="FilePenLine" [size]="16"></lucide-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="info">
+                <td mat-cell [attr.colspan]="displayedColumns.length" *matCellDef="let row">
+                  <div class="flex flex-row items-start gap-2">
+                    @if (row.context) {
+                      <span class="flex flex-row gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
+                        ><b>Context: </b>{{ row.context }}</span
+                      >
+                    }
+                    @if (row.tag) {
+                      <span class="flex flex-row items-center gap-1 rounded-sm bg-slate-200 px-1 py-0.5 text-[12px]"
+                        ><lucide-icon [img]="Tag" [size]="10"></lucide-icon><b>Tag: </b>{{ row.tag }}</span
+                      >
+                    }
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              <tr class="h-[38px]!" mat-row *matRowDef="let row; columns: ['info']; when: hasContext"></tr>
+            </table>
+          </div>
+
+          <mat-paginator
+            [length]="translations.data.length"
+            [pageSize]="20"
+            [showFirstLastButtons]="true"
+            aria-label="Select page of GitHub search results"
+          ></mat-paginator>
+        }
       }
     </div>
   `,
@@ -343,6 +359,9 @@ export class LanguageComponent implements AfterViewInit {
   openEditTranslationKeyDialog(translation: Translation): void {
     const dialogRef = this.dialog.open(EditTranslationKeyDialogComponent, {
       width: '400px',
+      height: '100%',
+      panelClass: 'full-height-right-dialog',
+      position: { top: '0', right: '0' },
       data: {
         translation: translation,
       },
@@ -352,7 +371,7 @@ export class LanguageComponent implements AfterViewInit {
       .pipe(take(1))
       .subscribe(result => {
         if (result) {
-          console.log('Edit translation:', result);
+          // Update the translation in the data source
         }
       });
   }
