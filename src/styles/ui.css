@@ -1,6 +1,6 @@
 .full-height-right-dialog .mat-mdc-dialog-surface {
-  border-radius: var(--mdc-dialog-container-shape, var(--mat-sys-corner-extra-large, 4px)) 0 0
-    var(--mdc-dialog-container-shape, var(--mat-sys-corner-extra-large, 4px));
+  border-radius: var(--mat-dialog-container-shape, var(--mat-sys-corner-extra-large, 4px)) 0 0
+    var(--mat-dialog-container-shape, var(--mat-sys-corner-extra-large, 4px));
 }
 
 .full-height-right-dialog .mat-mdc-dialog-content {

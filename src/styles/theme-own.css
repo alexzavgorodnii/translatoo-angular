@@ -72,16 +72,16 @@ html {
   --mat-toolbar-standard-height: 64px;
   --mat-paginator-container-size: 56px;
   --mat-divider-width: 1px;
-  --mdc-filled-button-container-height: 36px;
-  --mdc-outlined-button-container-height: 36px;
-  --mdc-text-button-container-height: 36px;
-  --mdc-icon-button-state-layer-size: 36px;
-  --mdc-icon-button-state-layer-size: 36px;
-  --mdc-icon-button-icon-size: 16px;
-  --mdc-list-list-item-one-line-container-height: 36px;
-  --mdc-list-list-item-leading-icon-size: 16px;
-  --mdc-list-list-item-leading-icon-size: 16px;
-  --mat-text-button-hover-state-layer-opacity: 0.1;
+  --mat-button-filled-container-height: 36px;
+  --mat-button-outlined-container-height: 36px;
+  --mat-button-text-container-height: 36px;
+  --mat-icon-button-state-layer-size: 36px;
+  --mat-icon-button-state-layer-size: 36px;
+  --mat-icon-button-icon-size: 16px;
+  --mat-list-list-item-one-line-container-height: 36px;
+  --mat-list-list-item-leading-icon-size: 16px;
+  --mat-list-list-item-leading-icon-size: 16px;
+  --mat-button-text-hover-state-layer-opacity: 0.1;
 
   --mat-card-title-text-line-height: 1.75rem;
   --mat-card-title-text-size: 1.375rem;
@@ -94,7 +94,7 @@ html {
   --mat-card-subtitle-text-weight: 500;
 
   --mat-toolbar-container-background-color: var(
-    --mdc-elevated-card-container-color,
+    --mat-card-elevated-container-color,
     var(--mat-sys-surface-container-low)
   );
   --mat-sidenav-container-width: 250px;
@@ -103,7 +103,7 @@ html {
   --mat-form-field-container-height: 26px;
   --mat-form-field-container-vertical-padding: 10px;
 
-  --mdc-dialog-supporting-text-color: var(--mat-sys-on-surface);
+  --mat-dialog-supporting-text-color: var(--mat-sys-on-surface);
 
   --mat-table-row-item-container-height: 38px;
   --mat-tooltip-container-color: var(--mat-sys-on-surface);

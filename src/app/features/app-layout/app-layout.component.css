@@ -5,9 +5,9 @@
 .sidebar {
   border-style: solid;
   border-width: 0;
-  background-color: var(--mdc-elevated-card-container-color, var(--mat-sys-surface-container-low));
-  border-color: var(--mdc-elevated-card-container-color, var(--mat-sys-surface-container-low));
-  border-top-right-radius: var(--mdc-elevated-card-container-shape, var(--mat-sys-corner-medium));
-  border-bottom-right-radius: var(--mdc-elevated-card-container-shape, var(--mat-sys-corner-medium));
-  box-shadow: var(--mdc-elevated-card-container-elevation, var(--mat-sys-level1));
+  background-color: var(--mat-card-elevated-container-color, var(--mat-sys-surface-container-low));
+  border-color: var(--mat-card-elevated-container-color, var(--mat-sys-surface-container-low));
+  border-top-right-radius: var(--mat-card-elevated-container-shape, var(--mat-sys-corner-medium));
+  border-bottom-right-radius: var(--mat-card-elevated-container-shape, var(--mat-sys-corner-medium));
+  box-shadow: var(--mat-card-elevated-container-elevation, var(--mat-sys-level1));
 }
