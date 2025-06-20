@@ -2,13 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { AuthService } from '../../src/app/core/services/auth.service';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-jest.mock('@supabase/supabase-js', () => {
-  const actual = jest.requireActual('@supabase/supabase-js');
-  return {
-    ...actual,
-    createClient: jest.fn(),
-  };
-});
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(),
+}));
+
+jest.mock('../../src/environments/environment', () => ({
+  environment: {
+    SUPABASE_URL: 'http://localhost:3000',
+    SUPABASE_KEY: 'test-key',
+  },
+}));
 
 describe('AuthService', () => {
   let service: AuthService;

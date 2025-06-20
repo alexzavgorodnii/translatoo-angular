@@ -46,17 +46,9 @@ export class NewProjectComponent {
     this.dialogRef.close();
   }
 
-  onAddClick(): void {
-    const req = this.projectsService.addProject(this.name()).subscribe({
-      next: project => {
-        this.project.set(project);
-        this.dialogRef.close(this.project());
-        req.unsubscribe();
-      },
-      error: error => {
-        console.error('Error adding project:', error);
-        req.unsubscribe();
-      },
-    });
+  async onAddClick(): Promise<void> {
+    const project = await this.projectsService.addProject(this.name());
+    this.project.set(project);
+    this.dialogRef.close(this.project());
   }
 }

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 import { Project, ProjectWithLanguages } from '../../../core/models/projects';
 import { SupabaseProjectsApi } from '../../../core/services/supabase-api.service';
 
@@ -11,73 +10,39 @@ export class ProjectsService extends SupabaseProjectsApi {
     super();
   }
 
-  getProjects(): Observable<Project[]> {
-    return new Observable(observer => {
-      this.supabase
-        .from('project')
-        .select('*')
-        .then(response => {
-          if (response.error) {
-            observer.error(response.error);
-          } else {
-            observer.next(response.data as Project[]);
-            observer.complete();
-          }
-        });
-    });
+  async getProjects(): Promise<Project[]> {
+    const { data, error } = await this.supabase.from('project').select('*');
+    if (error) {
+      throw error;
+    }
+    return (data as Project[]) || [];
   }
 
-  getProject(id: string): Observable<ProjectWithLanguages> {
-    return new Observable(observer => {
-      this.supabase
-        .from('project')
-        .select('*, languages:language(*, translations:translation(*))')
-        .match({ id })
-        .single()
-        .then(response => {
-          if (response.error) {
-            observer.error(response.error);
-          } else {
-            observer.next(response.data as ProjectWithLanguages);
-            observer.complete();
-          }
-        });
-    });
+  async getProject(id: string): Promise<ProjectWithLanguages> {
+    const { data, error } = await this.supabase
+      .from('project')
+      .select('*, languages:language(*, translations:translation(*))')
+      .match({ id })
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data as ProjectWithLanguages;
   }
 
-  getOnlyProject(id: string): Observable<Project> {
-    return new Observable(observer => {
-      this.supabase
-        .from('project')
-        .select('*')
-        .match({ id })
-        .single()
-        .then(response => {
-          if (response.error) {
-            observer.error(response.error);
-          } else {
-            observer.next(response.data as Project);
-            observer.complete();
-          }
-        });
-    });
+  async getOnlyProject(id: string): Promise<Project> {
+    const { data, error } = await this.supabase.from('project').select('*').match({ id }).single();
+    if (error) {
+      throw error;
+    }
+    return data as Project;
   }
 
-  addProject(name: string): Observable<Project> {
-    return new Observable(observer => {
-      this.supabase
-        .from('project')
-        .insert({ name })
-        .select()
-        .single()
-        .then(response => {
-          if (response.error) {
-            observer.error(response.error);
-          } else {
-            observer.next(response.data as Project);
-            observer.complete();
-          }
-        });
-    });
+  async addProject(name: string): Promise<Project> {
+    const { data, error } = await this.supabase.from('project').insert({ name }).select().single();
+    if (error) {
+      throw error;
+    }
+    return data as Project;
   }
 }

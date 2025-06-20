@@ -5,21 +5,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
-import { take } from 'rxjs/internal/operators/take';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatCardModule } from '@angular/material/card';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { appTypes, Language, LanguageWithTranslations } from '../../../../core/models/languages';
-import { ProjectWithLanguages } from '../../../../core/models/projects';
 import { Translation } from '../../../../core/models/translations';
 import { LanguagesService } from '../../../language/services/languages.service';
 import { ProjectsService } from '../../../projects/services/projects.service';
 import { TranslationsService } from '../../../language/services/translations.service';
-import { StateService } from '../../../../store/state.service';
 import { parseJSON, parseI18Next } from '../../../../core/utils/parsers/translation-parsers';
 import { BreadcrumbsComponent } from '../../../../shared/components/breadcrumbs/breadcrumbs.component';
+import { ProjectStore } from '../../store/project-store';
 
 @Component({
   selector: 'app-new-language',
@@ -41,7 +38,7 @@ import { BreadcrumbsComponent } from '../../../../shared/components/breadcrumbs/
       <app-breadcrumbs
         [breadcrumbs]="[
           { type: 'link', title: 'Projects', route: ['/', 'projects'] },
-          { type: 'link', title: project().name, route: ['/', 'projects', project().id] },
+          { type: 'link', title: projectStore.project().name, route: ['/', 'projects', projectStore.project().id] },
           { type: 'title', title: 'New language' },
         ]"
       />
@@ -90,7 +87,7 @@ import { BreadcrumbsComponent } from '../../../../shared/components/breadcrumbs/
                     <mat-form-field class="w-full max-w-[calc(400px)]">
                       <mat-label>Choose language</mat-label>
                       <mat-select [(ngModel)]="languageId">
-                        @for (language of project().languages; track language.id) {
+                        @for (language of projectStore.project().languages; track language.id) {
                           <mat-option [value]="language.id">
                             {{ language.name }}
                           </mat-option>
@@ -139,16 +136,10 @@ import { BreadcrumbsComponent } from '../../../../shared/components/breadcrumbs/
 export class NewLanguageComponent {
   loading = signal<boolean>(true);
   readonly types = signal(appTypes);
-  readonly project = signal<ProjectWithLanguages>({
-    id: '',
-    created_at: '',
-    name: '',
-    languages: [],
-  });
+  readonly projectStore = inject(ProjectStore);
   private readonly languagesService = inject(LanguagesService);
   private readonly projectsService = inject(ProjectsService);
   private readonly translationsService = inject(TranslationsService);
-  private stateService = inject(StateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly name = model('');
@@ -161,144 +152,42 @@ export class NewLanguageComponent {
   selectedFile: File | null = null;
 
   constructor() {
-    this.project.set(this.stateService.project);
-    if (this.project().id.length === 0) {
+    if (this.projectStore.project().id.length === 0) {
       const id = this.route.snapshot.paramMap.get('id');
       if (!id) {
         console.error('No project ID provided in the route.');
         return;
       }
-      this.projectsService
-        .getProject(id)
-        .pipe(takeUntilDestroyed())
-        .subscribe({
-          next: project => {
-            // Calculate progress for each language
-            project.languages.forEach(language => {
-              const totalTranslations = language.translations.length;
-              const translatedCount = language.translations.filter(
-                translation => translation.value && translation.value.length !== 0,
-              ).length;
-              language.progress = totalTranslations > 0 ? (translatedCount / totalTranslations) * 100 : 0;
-            });
-            this.project.set(project);
-            this.stateService.project = project; // Update the state service with the current project
-            this.loading.set(false);
-          },
-          error: error => {
-            console.error('Error loading project:', error);
-            this.loading.set(false);
-          },
-        });
+
+      this.initProject(id);
     } else {
       this.loading.set(false);
     }
   }
 
   onCancelClick(): void {
-    this.router.navigate(['/', 'projects', this.project().id]);
+    this.router.navigate(['/', 'projects', this.projectStore.project().id]);
   }
 
-  onAddClick(): void {
+  async onAddClick(): Promise<void> {
     // Start loading
     this.loading.set(true);
 
     // Handle file import
     if (this.copy() === 'file' && this.selectedFile) {
-      this.languagesService
-        .addLanguage(this.name(), this.project().id)
-        .pipe(take(1))
-        .subscribe({
-          next: (language: Language) => {
-            // Read and parse file content
-            this.readAndProcessFile(language)
-              .then(() => {
-                this.loading.set(false);
-                this.router.navigate(['/', 'projects', this.project().id]);
-              })
-              .catch(error => {
-                console.error('Error processing file:', error);
-                this.loading.set(false);
-              });
-          },
-          error: error => {
-            console.error('Error adding language:', error);
-            this.loading.set(false);
-          },
-        });
+      await this.fileImportHandling();
       return;
     }
 
-    // Rest of the existing code for other options
-    this.languagesService
-      .addLanguage(this.name(), this.project().id)
-      .pipe(take(1))
-      .subscribe({
-        next: language => {
-          if (this.copy() === 'language') {
-            // Existing code for copying from language...
-            this.languagesService
-              .getLanguage(this.languageId())
-              .pipe(take(1))
-              .subscribe({
-                next: (languageForCopy: LanguageWithTranslations) => {
-                  const translationsFromLanguage: Translation[] = languageForCopy.translations.map(translation => {
-                    return {
-                      context: translation.context,
-                      key: translation.key,
-                      value: '',
-                      order: translation.order,
-                      is_plural: translation.is_plural,
-                      plural_key: translation.plural_key,
-                      created_at: new Date().toISOString(),
-                      temp_value: translation.value,
-                      language_id: language.id,
-                    };
-                  });
-                  this.translationsService
-                    .addTranslations(translationsFromLanguage)
-                    .pipe(take(1))
-                    .subscribe({
-                      next: () => {
-                        const languageWithTranslations: LanguageWithTranslations = {
-                          ...language,
-                          translations: translationsFromLanguage,
-                          progress: 0,
-                        };
-                        this.language.set(languageWithTranslations);
-                        const currentProjectLanguages = this.stateService.project.languages;
-                        currentProjectLanguages.push(languageWithTranslations);
-                        this.stateService.updateProjectLanguages(currentProjectLanguages);
-                        this.router.navigate(['/', 'projects', this.project().id]);
-                      },
-                      error: () => {
-                        console.error('Error adding translations');
-                      },
-                    });
-                },
-                error: () => {
-                  console.error('Error fetching language for copy');
-                },
-              });
-          } else {
-            // Existing code for "no" option...
-            this.language.set(language);
-            const currentProjectLanguages = this.stateService.project.languages;
-            const languageWithTranslations: LanguageWithTranslations = {
-              ...language,
-              translations: [],
-              progress: 0,
-            };
-            currentProjectLanguages.push(languageWithTranslations);
-            this.stateService.updateProjectLanguages(currentProjectLanguages);
-            this.router.navigate(['/', 'projects', this.project().id]);
-          }
-        },
-        error: error => {
-          console.error('Error adding project:', error);
-          this.loading.set(false);
-        },
-      });
+    if (this.copy() === 'language') {
+      this.fromLanguageImportHandling();
+      return;
+    }
+
+    if (this.copy() === 'no') {
+      this.clearImportHandling();
+      return;
+    }
   }
 
   onFileSelected(event: Event): void {
@@ -349,24 +238,20 @@ export class NewLanguageComponent {
         return new Promise<void>((resolve, reject) => {
           this.translationsService
             .addTranslations(translationsToAdd)
-            .pipe(take(1))
-            .subscribe({
-              next: () => {
-                // Update state
-                const languageWithTranslations: LanguageWithTranslations = {
-                  ...language,
-                  translations: translationsToAdd,
-                  progress: 0,
-                };
-                const currentProjectLanguages = this.stateService.project.languages;
-                currentProjectLanguages.push(languageWithTranslations);
-                this.stateService.updateProjectLanguages(currentProjectLanguages);
-                resolve();
-              },
-              error: err => {
-                console.error('Error adding translations:', err);
-                reject(err);
-              },
+            .then(() => {
+              const languageWithTranslations: LanguageWithTranslations = {
+                ...language,
+                translations: translationsToAdd,
+                progress: 0,
+              };
+              const currentProjectLanguages = this.projectStore.project().languages;
+              currentProjectLanguages.push(languageWithTranslations);
+              this.projectStore.updateProjectLanguages(currentProjectLanguages);
+              resolve();
+            })
+            .catch(error => {
+              console.error('Error adding translations:', error);
+              reject(error);
             });
         });
       } else {
@@ -376,9 +261,9 @@ export class NewLanguageComponent {
           translations: [],
           progress: 0,
         };
-        const currentProjectLanguages = this.stateService.project.languages;
+        const currentProjectLanguages = this.projectStore.project().languages;
         currentProjectLanguages.push(languageWithTranslations);
-        this.stateService.updateProjectLanguages(currentProjectLanguages);
+        this.projectStore.updateProjectLanguages(currentProjectLanguages);
       }
     } catch (error) {
       console.error('Error processing file:', error);
@@ -413,6 +298,124 @@ export class NewLanguageComponent {
         return parseJSON(content);
       default:
         throw new Error(`Import for format '${format}' is not supported`);
+    }
+  }
+
+  private async fileImportHandling(): Promise<void> {
+    try {
+      const language = await this.languagesService.addLanguage(this.name(), this.projectStore.project().id);
+      this.readAndProcessFile(language)
+        .then(() => {
+          this.loading.set(false);
+          this.router.navigate(['/', 'projects', this.projectStore.project().id]);
+        })
+        .catch(error => {
+          console.error('Error processing file:', error);
+          this.loading.set(false);
+        });
+    } catch (error) {
+      console.error('Error during file import handling:', error);
+      this.loading.set(false);
+      return;
+    }
+  }
+
+  private async fromLanguageImportHandling(): Promise<void> {
+    try {
+      if (!this.name().trim()) {
+        console.error('Language name is required');
+        this.loading.set(false);
+        return;
+      }
+
+      if (!this.languageId()) {
+        console.error('Source language ID is required');
+        this.loading.set(false);
+        return;
+      }
+
+      const languageForCopy = await this.languagesService.getLanguage(this.languageId());
+      const language = await this.languagesService.addLanguage(this.name(), this.projectStore.project().id);
+
+      // Check if source language has translations
+      if (!languageForCopy.translations || languageForCopy.translations.length === 0) {
+        console.warn('Source language has no translations to copy');
+      }
+
+      const translationsFromLanguage: Translation[] = languageForCopy.translations.map(translation => {
+        return {
+          context: translation.context,
+          key: translation.key,
+          value: '',
+          order: translation.order,
+          is_plural: translation.is_plural,
+          plural_key: translation.plural_key,
+          created_at: new Date().toISOString(),
+          temp_value: translation.value,
+          language_id: language.id,
+        };
+      });
+
+      await this.translationsService.addTranslations(translationsFromLanguage);
+      const languageWithTranslations: LanguageWithTranslations = {
+        ...language,
+        translations: translationsFromLanguage,
+        progress: 0,
+      };
+      this.language.set(languageWithTranslations);
+      const currentProjectLanguages = this.projectStore.project().languages;
+      currentProjectLanguages.push(languageWithTranslations);
+      this.projectStore.updateProjectLanguages(currentProjectLanguages);
+
+      // Reset loading state before navigation
+      this.loading.set(false);
+      this.router.navigate(['/', 'projects', this.projectStore.project().id]);
+    } catch (error) {
+      console.error('Error during language import handling:', error);
+      this.loading.set(false);
+      return;
+    }
+  }
+
+  private async clearImportHandling(): Promise<void> {
+    try {
+      const language = await this.languagesService.addLanguage(this.name(), this.projectStore.project().id);
+      this.language.set(language);
+      const currentProjectLanguages = this.projectStore.project().languages;
+      const languageWithTranslations: LanguageWithTranslations = {
+        ...language,
+        translations: [],
+        progress: 0,
+      };
+      currentProjectLanguages.push(languageWithTranslations);
+      this.projectStore.updateProjectLanguages(currentProjectLanguages);
+      this.router.navigate(['/', 'projects', this.projectStore.project().id]);
+    } catch (error) {
+      console.error('Error during clear import handling:', error);
+      this.loading.set(false);
+      return;
+    }
+  }
+
+  private async initProject(id: string): Promise<void> {
+    try {
+      this.projectStore.setLoading(true);
+      const project = await this.projectsService.getProject(id);
+      project.languages.forEach(language => {
+        const totalTranslations = language.translations.length;
+        const translatedCount = language.translations.filter(
+          translation => translation.value && translation.value.length !== 0,
+        ).length;
+        language.progress = totalTranslations > 0 ? (translatedCount / totalTranslations) * 100 : 0;
+      });
+      this.projectStore.setProject(project);
+      this.projectStore.setLoading(false);
+      this.loading.set(false);
+    } catch (error) {
+      console.error('Error loading project:', error);
+      this.projectStore.setLoading(false);
+      this.projectStore.setError(true);
+      this.loading.set(false);
     }
   }
 }

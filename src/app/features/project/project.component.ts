@@ -2,17 +2,16 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { LucideAngularModule, Plus } from 'lucide-angular';
 import { MatDialog } from '@angular/material/dialog';
-import { ProjectWithLanguages } from '../../core/models/projects';
 import { ProjectsService } from '../projects/services/projects.service';
-import { StateService } from '../../store/state.service';
 import { DecimalPipe } from '@angular/common';
 import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadcrumbs.component';
+import { ProjectStore } from './store/project-store';
+import { ErrorMessageComponent } from '../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-project',
@@ -26,6 +25,7 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
     LucideAngularModule,
     DecimalPipe,
     BreadcrumbsComponent,
+    ErrorMessageComponent,
   ],
   template: `
     <mat-toolbar>
@@ -36,7 +36,7 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
         ]"
       />
       <div class="flex-grow"></div>
-      <button mat-button [routerLink]="['/', 'projects', project().id, 'new-language']">
+      <button mat-button [routerLink]="['/', 'projects', projectStore.project().id, 'new-language']">
         <span class="inline-flex flex-row items-center gap-1">
           <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
           New language
@@ -44,11 +44,13 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
       </button>
     </mat-toolbar>
     <div class="w-full p-10">
-      @if (loading()) {
+      @if (projectStore.loading()) {
         <mat-progress-bar mode="query"></mat-progress-bar>
+      } @else if (projectStore.isError()) {
+        <app-error-message [title]="'Project loading error'" />
       } @else {
         <mat-list>
-          @for (language of project().languages; track language.id) {
+          @for (language of projectStore.project().languages; track language.id) {
             <mat-card appearance="raised" class="mb-4">
               <mat-card-content>
                 <mat-list-item>
@@ -75,47 +77,41 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectComponent {
-  project = signal<ProjectWithLanguages>({
-    id: '',
-    created_at: '',
-    name: '',
-    languages: [],
-  });
-  loading = signal<boolean>(true);
   title = signal<string>('Loading...');
   readonly dialog = inject(MatDialog);
   readonly Plus = Plus;
+  readonly projectStore = inject(ProjectStore);
   private projectsService = inject(ProjectsService);
-  private stateService = inject(StateService);
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.loading.set(false);
+      this.projectStore.setLoading(false);
+      this.projectStore.setError(true);
       return;
     }
-    this.projectsService
-      .getProject(id)
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: project => {
-          project.languages.forEach(language => {
-            const totalTranslations = language.translations.length;
-            const translatedCount = language.translations.filter(
-              translation => translation.value && translation.value.length !== 0,
-            ).length;
-            language.progress = totalTranslations > 0 ? (translatedCount / totalTranslations) * 100 : 0;
-          });
-          this.project.set(project);
-          this.stateService.project = project;
-          this.title.set(project.name);
-          this.loading.set(false);
-        },
-        error: error => {
-          console.error('Error loading project:', error);
-          this.loading.set(false);
-        },
+    this.init(id);
+  }
+
+  private async init(id: string): Promise<void> {
+    try {
+      this.projectStore.setLoading(true);
+      const project = await this.projectsService.getProject(id);
+      project.languages.forEach(language => {
+        const totalTranslations = language.translations.length;
+        const translatedCount = language.translations.filter(
+          translation => translation.value && translation.value.length !== 0,
+        ).length;
+        language.progress = totalTranslations > 0 ? (translatedCount / totalTranslations) * 100 : 0;
       });
+      this.projectStore.setProject(project);
+      this.title.set(project.name);
+      this.projectStore.setLoading(false);
+    } catch (error) {
+      console.error('Error loading project:', error);
+      this.projectStore.setLoading(false);
+      this.projectStore.setError(true);
+    }
   }
 }

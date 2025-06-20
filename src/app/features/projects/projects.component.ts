@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
@@ -9,9 +8,10 @@ import { RouterModule } from '@angular/router';
 import { LucideAngularModule, Plus } from 'lucide-angular';
 import { MatDialog } from '@angular/material/dialog';
 import { NewProjectComponent } from './components/new-project/new-project.component';
-import { Project } from '../../core/models/projects';
 import { ProjectsService } from './services/projects.service';
 import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadcrumbs.component';
+import { ProjectsStore } from './store/projects-store';
+import { ErrorMessageComponent } from '../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-projects',
@@ -24,6 +24,7 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
     RouterModule,
     LucideAngularModule,
     BreadcrumbsComponent,
+    ErrorMessageComponent,
   ],
   template: `
     <mat-toolbar>
@@ -37,11 +38,13 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
       </button>
     </mat-toolbar>
     <div class="w-full p-10">
-      @if (loading()) {
+      @if (projectsStore.loading()) {
         <mat-progress-bar mode="query"></mat-progress-bar>
+      } @else if (projectsStore.isError()) {
+        <app-error-message [title]="'Projects loading error'" />
       } @else {
         <mat-list>
-          @for (project of projects(); track project.id) {
+          @for (project of projectsStore.projects(); track project.id) {
             <mat-card appearance="raised" class="mb-4">
               <mat-card-content>
                 <mat-list-item>
@@ -62,26 +65,13 @@ import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadc
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsComponent {
-  projects = signal<Project[]>([]);
-  loading = signal<boolean>(true);
   readonly Plus = Plus;
   readonly dialog = inject(MatDialog);
+  readonly projectsStore = inject(ProjectsStore);
   private projectsService = inject(ProjectsService);
 
   constructor() {
-    this.projectsService
-      .getProjects()
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: projects => {
-          this.projects.set(projects);
-          this.loading.set(false);
-        },
-        error: error => {
-          console.error('Error loading projects:', error);
-          this.loading.set(false);
-        },
-      });
+    this.init();
   }
 
   openNewProjectDialog(): void {
@@ -92,8 +82,23 @@ export class ProjectsComponent {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.projects.update(projects => [...projects, result]);
+        this.projectsStore.updateState(state => ({
+          ...state,
+          projects: [...state.projects, result],
+        }));
       }
     });
+  }
+
+  private async init() {
+    try {
+      this.projectsStore.setError(false);
+      this.projectsStore.setProjects(await this.projectsService.getProjects());
+      this.projectsStore.setLoading(false);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      this.projectsStore.setLoading(false);
+      this.projectsStore.setError(true);
+    }
   }
 }

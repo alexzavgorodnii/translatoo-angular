@@ -9,8 +9,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ArrowRight, LucideAngularModule, PanelLeft, Plus, X } from 'lucide-angular';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { take } from 'rxjs/internal/operators/take';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -21,19 +19,18 @@ import {
 } from '../../components/import-confirmation/import-confirmation.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { LanguageWithTranslations } from '../../../../core/models/languages';
-import { ProjectWithLanguages } from '../../../../core/models/projects';
 import {
   TranslationFromFile,
   UpdatedTranslationFromFile,
   MissingTranslationFromFile,
 } from '../../../../core/models/translations';
 import { readFileContent, parseFileContent, compareTranslations } from '../../../../core/utils/utils';
-import { StateService } from '../../../../store/state.service';
 import { ProjectsService } from '../../../projects/services/projects.service';
 import { LanguagesService } from '../../services/languages.service';
 import { TranslationsService } from '../../services/translations.service';
 import { BreadcrumbsComponent } from '../../../../shared/components/breadcrumbs/breadcrumbs.component';
+import { LanguageStore } from '../../store/language-store';
+import { ProjectStore } from '../../../project/store/project-store';
 
 @Component({
   selector: 'app-import-language',
@@ -59,8 +56,8 @@ import { BreadcrumbsComponent } from '../../../../shared/components/breadcrumbs/
       <app-breadcrumbs
         [breadcrumbs]="[
           { type: 'link', title: 'Projects', route: ['/projects'] },
-          { type: 'link', title: project().name, route: ['/projects', project().id] },
-          { type: 'link', title: language().name, route: ['/languages', language().id] },
+          { type: 'link', title: projectStore.project().name, route: ['/projects', projectStore.project().id] },
+          { type: 'link', title: languageStore.language().name, route: ['/languages', languageStore.language().id] },
           { type: 'title', title: 'Import' },
         ]"
       />
@@ -237,21 +234,6 @@ export class ImportLanguageComponent {
   readonly X = X;
   readonly router = inject(Router);
   readonly dialog = inject(MatDialog);
-  readonly project = signal<ProjectWithLanguages>({
-    id: '',
-    created_at: '',
-    name: 'Loading...',
-    languages: [],
-  });
-  readonly language = signal<LanguageWithTranslations>({
-    id: '',
-    name: 'Loading...',
-    project_id: '',
-    created_at: '',
-    format: '',
-    app_type: '',
-    translations: [],
-  });
   loading = signal<boolean>(true);
   loadingProject = signal<boolean>(true);
   loadingLanguage = signal<boolean>(true);
@@ -267,8 +249,9 @@ export class ImportLanguageComponent {
   readonly showJsonFormatSelector = signal<boolean>(false);
   readonly selectedFormat = model('keyvalue-json');
   readonly tag = model('');
+  readonly languageStore = inject(LanguageStore);
+  readonly projectStore = inject(ProjectStore);
 
-  private readonly stateService = inject(StateService);
   private readonly languagesService = inject(LanguagesService);
   private readonly projectsService = inject(ProjectsService);
   private readonly translationsService = inject(TranslationsService);
@@ -276,44 +259,24 @@ export class ImportLanguageComponent {
   private readonly _snackBar = inject(MatSnackBar);
 
   constructor() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
-      console.error('No language ID provided in the route.');
+    if (this.languageStore.language().id === '') {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (!id) {
+        console.error('No language ID provided in the route.');
+        this.loading.set(false);
+        this.error.set(true);
+        return;
+      }
+      this.init(id);
+    } else {
       this.loading.set(false);
-      this.error.set(true);
-      return;
+      this.loadingLanguage.set(false);
+      if (this.projectStore.project().id === '') {
+        this.init(this.languageStore.language().id);
+      } else {
+        this.loadingProject.set(false);
+      }
     }
-    this.languagesService
-      .getLanguage(id)
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: language => {
-          this.language.set(language);
-          this.stateService.language = language;
-          this.loadingLanguage.set(false);
-          this.projectsService
-            .getProject(language.project_id)
-            .pipe(take(1))
-            .subscribe({
-              next: project => {
-                this.project.set(project);
-                this.stateService.project = project;
-                this.loadingProject.set(false);
-                this.loading.set(false);
-              },
-              error: error => {
-                console.error('Error loading project:', error);
-                this.loading.set(false);
-                this.error.set(true);
-              },
-            });
-        },
-        error: error => {
-          console.error('Error loading language:', error);
-          this.loading.set(false);
-          this.error.set(true);
-        },
-      });
   }
 
   onFileSelected(event: Event): void {
@@ -341,7 +304,7 @@ export class ImportLanguageComponent {
   }
 
   onCancelClick(): void {
-    this.router.navigate(['/', 'languages', this.language().id]);
+    this.router.navigate(['/', 'languages', this.languageStore.language().id]);
   }
 
   async onNextClick() {
@@ -353,7 +316,7 @@ export class ImportLanguageComponent {
     try {
       const fileContent = await readFileContent(this.selectedFile);
       const imported = parseFileContent(fileContent, this.selectedFormat());
-      const result = compareTranslations(imported, this.language().translations);
+      const result = compareTranslations(imported, this.languageStore.language().translations);
       this.newTranslations.set(result.newTranslations);
       this.updateTranslations.set(result.updatedTranslations);
       this.missingTranslations.set(result.missingTranslations);
@@ -368,7 +331,7 @@ export class ImportLanguageComponent {
     const dialogRef = this.dialog.open(ImportConfirmationComponent, {
       width: '400px',
       data: {
-        languageName: this.language().name,
+        languageName: this.languageStore.language().name,
         newTranslationsCount: this.newTranslations().length,
         updatedTranslationsCount: this.selectedUpdateTranslations().length,
         missingTranslationsCount: this.selectedMissingTranslations().length,
@@ -395,9 +358,9 @@ export class ImportLanguageComponent {
     this.selectedMissingTranslations.set(event as MissingTranslationFromFile[]);
   }
 
-  finishImport(): void {
+  async finishImport(): Promise<void> {
     // Update the language with new translations in the database
-    if (this.language().id) {
+    if (this.languageStore.language().id) {
       const updateTranslations = this.selectedUpdateTranslations().map(t => ({
         id: t.id,
         key: t.key,
@@ -409,42 +372,55 @@ export class ImportLanguageComponent {
         order: t.order,
       }));
 
-      this.translationsService
-        .importScriptTranslations(
-          this.language().id,
+      try {
+        await this.translationsService.importScriptTranslations(
+          this.languageStore.language().id,
           this.newTranslations(),
           updateTranslations,
           this.selectedMissingTranslations(),
           this.tag(),
-        )
-        .pipe(take(1))
-        .subscribe({
-          next: () => {
-            this._snackBar.open(
-              `Import successful (Applied ${this.newTranslations().length} new,
-                ${this.selectedUpdateTranslations().length} updated,
-                ${this.selectedMissingTranslations().length} to delete)`,
-              'Close',
-              {
-                duration: 5000,
-              },
-            );
-            this.sending.set(false);
-            this.router.navigate(['/', 'languages', this.language().id]);
+        );
+        this._snackBar.open(
+          `Import successful (Applied ${this.newTranslations().length} new,
+            ${this.selectedUpdateTranslations().length} updated,
+            ${this.selectedMissingTranslations().length} to delete)`,
+          'Close',
+          {
+            duration: 5000,
           },
-          error: error => {
-            this._snackBar.open(
-              `Import failed (${error instanceof Error ? error.message : 'Failed to apply changes'}`,
-              'Close',
-              {
-                duration: 5000,
-              },
-            );
-            this.sending.set(false);
+        );
+        this.sending.set(false);
+        this.router.navigate(['/', 'languages', this.languageStore.language().id]);
+      } catch (error) {
+        this._snackBar.open(
+          `Import failed (${error instanceof Error ? error.message : 'Failed to apply changes'}`,
+          'Close',
+          {
+            duration: 5000,
           },
-        });
+        );
+        this.sending.set(false);
+      }
     } else {
       throw new Error('Language ID is missing');
+    }
+  }
+
+  private async init(id: string): Promise<void> {
+    try {
+      const language = await this.languagesService.getLanguage(id);
+      this.languageStore.setLanguage(language);
+      this.loadingLanguage.set(false);
+      this.loading.set(false);
+      if (this.projectStore.project().id === '') {
+        const project = await this.projectsService.getProject(language.project_id);
+        this.projectStore.setProject(project);
+        this.loadingProject.set(false);
+      }
+    } catch (error) {
+      console.error('Error loading language:', error);
+      this.loading.set(false);
+      this.error.set(true);
     }
   }
 }

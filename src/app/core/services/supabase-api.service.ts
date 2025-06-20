@@ -27,25 +27,25 @@ export abstract class SupabaseAuthApi extends SupabaseApiBase {
 }
 
 export abstract class SupabaseTranslationsApi extends SupabaseApiBase {
-  abstract addTranslations(translate: Translation[]): Observable<Translation[]>;
+  abstract addTranslations(translate: Translation[]): Promise<Translation[]>;
   abstract importScriptTranslations(
     languageId: string,
     newTranslations: TranslationFromFile[],
     updateTranslations: TranslationFromFile[],
     deleteTranslations: TranslationFromFile[],
     tag: string,
-  ): Observable<void>;
-  abstract updateTranslationValue(id: number, value: string): Observable<Translation>;
+  ): Promise<void>;
+  abstract updateTranslationValue(id: number, value: string): Promise<Translation>;
 }
 
 export abstract class SupabaseLanguagesApi extends SupabaseApiBase {
-  abstract addLanguage(name: string, project_id: string): Observable<Language>;
-  abstract getLanguage(id: string): Observable<LanguageWithTranslations>;
+  abstract addLanguage(name: string, project_id: string): Promise<Language>;
+  abstract getLanguage(id: string): Promise<LanguageWithTranslations>;
 }
 
 export abstract class SupabaseProjectsApi extends SupabaseApiBase {
-  abstract getProjects(): Observable<Project[]>;
-  abstract getProject(id: string): Observable<ProjectWithLanguages>;
-  abstract getOnlyProject(id: string): Observable<Project>;
-  abstract addProject(name: string): Observable<Project>;
+  abstract getProjects(): Promise<Project[]>;
+  abstract getProject(id: string): Promise<ProjectWithLanguages>;
+  abstract getOnlyProject(id: string): Promise<Project>;
+  abstract addProject(name: string): Promise<Project>;
 }

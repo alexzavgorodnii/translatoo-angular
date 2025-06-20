@@ -4,8 +4,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { LanguageWithTranslations } from '../../core/models/languages';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { Translation } from '../../core/models/translations';
@@ -37,8 +35,10 @@ import { EditTranslationKeyDialogComponent } from './components/edit-translation
 import { take } from 'rxjs/internal/operators/take';
 import { BreadcrumbsComponent } from '../../shared/components/breadcrumbs/breadcrumbs.component';
 import { ProjectsService } from '../projects/services/projects.service';
-import { Project } from '../../core/models/projects';
 import { EmptyMessageComponent } from '../../shared/components/empty-message/empty-message.component';
+import { LanguageStore } from './store/language-store';
+import { ProjectStore } from '../project/store/project-store';
+import { ErrorMessageComponent } from '../../shared/components/error-message/error-message';
 
 @Component({
   selector: 'app-language',
@@ -59,20 +59,25 @@ import { EmptyMessageComponent } from '../../shared/components/empty-message/emp
     TranslationRowValueComponent,
     BreadcrumbsComponent,
     EmptyMessageComponent,
+    ErrorMessageComponent,
   ],
   template: `
     <mat-toolbar>
       <app-breadcrumbs
         [breadcrumbs]="[
           { title: 'Projects', route: ['/', 'projects'], type: 'link' },
-          { title: project().name, route: ['/', 'projects', language().project_id], type: 'link' },
-          { title: language().name, type: 'title' },
+          {
+            title: projectStore.project().name,
+            route: ['/', 'projects', languageStore.language().project_id],
+            type: 'link',
+          },
+          { title: languageStore.language().name, type: 'title' },
         ]"
       />
       <div class="flex-grow"></div>
-      @if (!loading()) {
+      @if (!languageStore.loading()) {
         <div class="flex flex-row gap-2">
-          <a mat-button [routerLink]="['/', 'languages', language().id, 'import']">
+          <a mat-button [routerLink]="['/', 'languages', languageStore.language().id, 'import']">
             <span class="inline-flex flex-row items-center gap-1">
               <lucide-icon [img]="CloudUpload" [size]="16"></lucide-icon>
               Import
@@ -109,21 +114,23 @@ import { EmptyMessageComponent } from '../../shared/components/empty-message/emp
         'h-[calc(100vh-var(--mat-toolbar-standard-height)-var(--mat-divider-width))] w-full overflow-hidden px-10 py-5'
       "
     >
-      @if (loading()) {
+      @if (languageStore.loading()) {
         <mat-progress-bar mode="query"></mat-progress-bar>
       } @else {
         @if (translations.data.length === 0) {
           <app-empty-message
-            [title]="'No translations found for ' + language().name + '.'"
+            [title]="'No translations found for ' + languageStore.language().name + '.'"
             [message]="'You can import translations using the button below.'"
           >
-            <a mat-button [routerLink]="['/', 'languages', language().id, 'import']">
+            <a mat-button [routerLink]="['/', 'languages', languageStore.language().id, 'import']">
               <span class="inline-flex flex-row items-center gap-1">
                 <lucide-icon [img]="CloudUpload" [size]="16"></lucide-icon>
                 Import
               </span>
             </a>
           </app-empty-message>
+        } @else if (projectStore.isError()) {
+          <app-error-message [title]="'Language loading error'" />
         } @else {
           <div
             [class]="
@@ -249,22 +256,9 @@ export class LanguageComponent implements AfterViewInit {
   readonly ListFilter = ListFilter;
   readonly Tag = Tag;
   readonly dialog = inject(MatDialog);
+  readonly languageStore = inject(LanguageStore);
+  readonly projectStore = inject(ProjectStore);
   private _snackBar = inject(MatSnackBar);
-  language = signal<LanguageWithTranslations>({
-    id: '',
-    name: 'Loading...',
-    project_id: '',
-    created_at: '',
-    format: '',
-    app_type: '',
-    translations: [],
-  });
-  project = signal<Project>({
-    id: '',
-    created_at: '',
-    name: 'Loading...',
-  });
-  loading = signal<boolean>(false);
   displayedColumns: string[] = ['key', 'value', 'controls'];
   translations = new MatTableDataSource<Translation>([]);
   copied = signal<boolean>(false);
@@ -283,49 +277,11 @@ export class LanguageComponent implements AfterViewInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
       console.error('No project ID provided in the route.');
-      this.loading.set(false);
+      this.languageStore.setLoading(false);
+      this.languageStore.setError(true);
       return;
     }
-    this.languagesService
-      .getLanguage(id)
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: language => {
-          this.language.set(language);
-          this.projectsService
-            .getProject(language.project_id)
-            .pipe(take(1))
-            .subscribe({
-              next: project => this.project.set(project),
-              error: error => {
-                console.error('Error loading project:', error);
-              },
-            });
-          this.translations.data = language.translations;
-          this.translations.filterPredicate = (data: Translation, filter: string) => {
-            if (filter === 'all') {
-              return true;
-            }
-            if (filter === 'untranslated') {
-              return !data.value || data.value.trim() === '';
-            }
-            return data.tag === filter;
-          };
-          const uniqueTags = new Set<string>();
-          uniqueTags.add('all');
-          language.translations.forEach(translation => {
-            if (translation.tag) {
-              uniqueTags.add(translation.tag);
-            }
-          });
-          this.tags.set(Array.from(uniqueTags));
-          this.loading.set(false);
-        },
-        error: error => {
-          console.error('Error loading project:', error);
-          this.loading.set(false);
-        },
-      });
+    this.init(id);
   }
 
   ngAfterViewInit() {
@@ -342,8 +298,8 @@ export class LanguageComponent implements AfterViewInit {
     const dialogRef = this.dialog.open(ExportLanguageComponent, {
       width: '400px',
       data: {
-        languageName: this.language()?.name,
-        translations: this.language()?.translations,
+        languageName: this.languageStore.language().name,
+        translations: this.languageStore.language().translations,
       },
     });
     dialogRef
@@ -392,7 +348,7 @@ export class LanguageComponent implements AfterViewInit {
   }
 
   async handleCopyToClipboard(format: string) {
-    if (!this.language() || !this.translations.data.length) return;
+    if (!this.languageStore.language() || !this.translations.data.length) return;
 
     try {
       // Format translations based on language format (JSON is default)
@@ -429,5 +385,39 @@ export class LanguageComponent implements AfterViewInit {
 
   hasContext(index: number, row: Translation): boolean {
     return !!row.context || !!row.tag;
+  }
+
+  private async init(id: string): Promise<void> {
+    try {
+      this.languageStore.setLoading(true);
+      const language = await this.languagesService.getLanguage(id);
+      this.languageStore.setLanguage(language);
+
+      this.translations.data = language.translations;
+      this.translations.filterPredicate = (data: Translation, filter: string) => {
+        if (filter === 'all') {
+          return true;
+        }
+        if (filter === 'untranslated') {
+          return !data.value || data.value.trim() === '';
+        }
+        return data.tag === filter;
+      };
+      const uniqueTags = new Set<string>();
+      uniqueTags.add('all');
+      language.translations.forEach(translation => {
+        if (translation.tag) {
+          uniqueTags.add(translation.tag);
+        }
+      });
+      this.tags.set(Array.from(uniqueTags));
+      const project = await this.projectsService.getProject(language.project_id);
+      this.projectStore.setProject(project);
+      this.languageStore.setLoading(false);
+    } catch (error) {
+      console.error('Error loading language:', error);
+      this.languageStore.setLoading(false);
+      this.languageStore.setError(true);
+    }
   }
 }

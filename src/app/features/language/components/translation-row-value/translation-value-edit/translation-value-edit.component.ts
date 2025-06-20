@@ -10,9 +10,7 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { take } from 'rxjs/internal/operators/take';
 import { TranslationsService } from '../../../services/translations.service';
-import { Translation } from '../../../../../core/models/translations';
 
 export interface TranslationValueEditComponentData {
   id: number;
@@ -79,21 +77,28 @@ export class TranslationValueEditComponent {
   onCancelClick(): void {
     this.dialogRef.close(null);
   }
-  onSaveClick(): void {
+  async onSaveClick(): Promise<void> {
     this.updateInProgress.set(true);
-    this.translationsService
-      .updateTranslationValue(this.data.id!, this.data.value)
-      .pipe(take(1))
-      .subscribe({
-        next: (translation: Translation) => {
-          this.updateInProgress.set(false);
-          this.dialogRef.close(translation);
-        },
-        error: error => {
-          console.error('Error updating translation value:', error);
-          this.error.set(true);
-          this.updateInProgress.set(false);
-        },
-      });
+    this.error.set(false);
+    if (!this.data.value || this.data.value.trim() === '') {
+      this.error.set(true);
+      this.updateInProgress.set(false);
+      return;
+    }
+    if (this.data.value === this.data.temp_value) {
+      this.dialogRef.close(null);
+      return;
+    }
+    // Call the service to update the translation value
+    try {
+      const translation = this.translationsService.updateTranslationValue(this.data.id, this.data.value);
+      this.updateInProgress.set(false);
+      this.dialogRef.close(translation);
+    } catch (error) {
+      console.error('Error updating translation value:', error);
+      this.error.set(true);
+      this.updateInProgress.set(false);
+      return;
+    }
   }
 }

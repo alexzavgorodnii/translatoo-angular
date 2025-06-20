@@ -3,13 +3,16 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { LanguagesService } from '../../src/app/features/language/services/languages.service';
 import { Language } from '../../src/app/core/models/languages';
 
-jest.mock('@supabase/supabase-js', () => {
-  const actual = jest.requireActual('@supabase/supabase-js');
-  return {
-    ...actual,
-    createClient: jest.fn(),
-  };
-});
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn(),
+}));
+
+jest.mock('../../src/environments/environment', () => ({
+  environment: {
+    SUPABASE_URL: 'http://localhost:3000',
+    SUPABASE_KEY: 'test-key',
+  },
+}));
 
 describe('LanguagesService', () => {
   let service: LanguagesService;
@@ -56,7 +59,7 @@ describe('LanguagesService', () => {
   });
 
   it('should call supabase.from().select() with correct parameters after getLanguage', done => {
-    service.getLanguage('1').subscribe(language => {
+    service.getLanguage('1').then(language => {
       expect(language).toEqual(mockLanguageResponse.data);
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('language');
       done();
@@ -68,8 +71,7 @@ describe('LanguagesService', () => {
 
     (mockSupabaseClient as any).single = jest.fn().mockResolvedValue(mockInsertResponse);
     (createClient as jest.Mock).mockReturnValue(mockSupabaseClient);
-
-    service.addLanguage(newLanguage.name, newLanguage.project_id).subscribe(language => {
+    service.addLanguage(newLanguage.name, newLanguage.project_id).then(language => {
       expect(language).toEqual(mockInsertResponse.data);
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('language');
       done();

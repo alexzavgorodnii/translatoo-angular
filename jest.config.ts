@@ -13,6 +13,8 @@ const config: Config = {
   moduleNameMapper: {
     '^tests/(.*)$': '<rootDir>/src/$1',
   },
+  transformIgnorePatterns: ['node_modules/(?!(@supabase|@angular|@ngrx|rxjs|tslib|zone.js)/)'],
+  extensionsToTreatAsEsm: ['.ts'],
 };
 
 export default config;
