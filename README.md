@@ -1,59 +1,157 @@
 # Translatoo
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.0.
+A modern translation management platform built with Angular 20, Material Design, and Nx monorepo architecture. Translatoo helps teams manage their application translations efficiently with support for multiple file formats, collaborative features, and real-time progress tracking.
 
-## Development server
+## 🚀 Features
 
-To start a local development server, run:
+- **Multi-format Support**: Import/export translations in JSON, i18next, CSV, XML, ARB, XLIFF, iOS Strings, PO, and more
+- **Project Management**: Organize translations by projects and languages
+- **Progress Tracking**: Real-time translation progress visualization
+- **Collaboration**: Team-based translation management
+- **File Import/Export**: Seamless import from existing translation files
+- **Modern UI**: Built with Angular Material and Tailwind CSS
+- **Type Safety**: Full TypeScript support with shared type definitions
 
-```bash
-ng serve
-```
+## 🏗️ Architecture
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+This is an Nx monorepo containing:
 
-## Code scaffolding
+- **Frontend App** (`apps/frontend`): Angular 20 application with Material Design
+- **Backend API** (`apps/api`): Express.js API server
+- **Shared Types** (`shared-types`): Common TypeScript definitions
+- **E2E Tests** (`e2e`): End-to-end testing with Playwright
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## 📋 Prerequisites
 
-```bash
-ng generate component component-name
-```
+- Node.js (18+ recommended)
+- npm or yarn
+- Supabase account (for backend database)
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🚦 Getting Started
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+### Installation
 
 ```bash
-ng test
+# Clone the repository
+git clone <repository-url>
+cd translatoo
+
+# Install dependencies
+npm install
 ```
 
-## Running end-to-end tests
+### Development
 
-For end-to-end (e2e) testing, run:
+#### Start the frontend application:
 
 ```bash
-ng e2e
+npm start
+# or
+nx serve translatoo
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+The application will be available at `http://localhost:4200/`
 
-## Additional Resources
+#### Start the backend API:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npm run start:api
+# or
+nx serve api
+```
+
+The API will be available at `http://localhost:3333/`
+
+### Environment Setup
+
+Create environment files for your Supabase configuration:
+
+- `apps/frontend/src/environments/environment.development.ts`
+- `apps/frontend/src/environments/environment.ts`
+
+## 🧪 Testing
+
+### Unit Tests
+
+Run unit tests with Jest:
+
+```bash
+npm test
+# or
+npm run test:watch  # Watch mode
+npm run test:ci     # CI mode
+```
+
+### End-to-End Tests
+
+Run E2E tests with Playwright:
+
+```bash
+npm run test:e2e
+```
+
+## 🔧 Building
+
+### Development Build
+
+```bash
+npm run build
+# or
+nx build
+```
+
+### Production Build
+
+```bash
+nx build --configuration=production
+```
+
+Build artifacts will be stored in the `dist/` directory.
+
+## 📁 Project Structure
+
+```
+translatoo/
+├── apps/
+│   ├── frontend/          # Angular frontend application
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── core/     # Core services, guards, models
+│   │   │   │   ├── features/ # Feature modules (projects, languages, etc.)
+│   │   │   │   └── shared/   # Shared components
+│   │   │   └── environments/ # Environment configurations
+│   │   └── public/        # Static assets
+│   ├── api/               # Express.js backend API
+│   └── e2e/              # End-to-end tests
+├── shared-types/          # Shared TypeScript definitions
+└── tests/                # Additional test files
+```
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+- **Angular 20** - Modern web framework
+- **Angular Material** - UI component library
+- **Tailwind CSS** - Utility-first CSS framework
+- **TypeScript** - Type-safe JavaScript
+- **RxJS** - Reactive programming
+- **Lucide Angular** - Beautiful icons
+
+### Backend
+
+- **Supabase** - Backend-as-a-Service (Database, Auth, API)
+- **Express.js** - Web application framework
+- **TypeScript** - Server-side type safety
+
+### Development
+
+- **Nx** - Monorepo development platform
+- **Jest** - Testing framework
+- **Playwright** - End-to-end testing
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
