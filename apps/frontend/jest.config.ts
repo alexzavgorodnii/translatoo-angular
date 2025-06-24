@@ -7,7 +7,7 @@ const presetConfig = presets.createCjsPreset();
 const config: Config = {
   ...presetConfig,
   testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
+  setupFilesAfterEnv: ['<rootDir>/../../setup-jest.ts'],
   testPathIgnorePatterns: ['/node_modules/', '<rootDir>/node_modules/', '<rootDir>/dist/', '<rootDir>/e2e/'],
   moduleDirectories: ['node_modules', 'tests'],
   moduleNameMapper: {
