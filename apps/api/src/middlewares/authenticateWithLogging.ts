@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import * as AuthService from '../auth/auth.service';
 import { getClientIp, getUserAgent } from '../utils/client';
+import { logger } from '../services/logger';
 
 export function authenticateWithLogging(req: Request, res: Response, next: NextFunction) {
   const ipAddress = getClientIp(req);
@@ -21,8 +22,7 @@ export function authenticateWithLogging(req: Request, res: Response, next: NextF
 
       passport.authenticate('local', { session: false }, async (err, user, info) => {
         if (err) {
-          console.error('Authentication error:', err);
-
+          logger.log('error', 'Authentication error:', err);
           await AuthService.logLoginAttempt({
             provider: 'local',
             ipAddress,
@@ -52,10 +52,10 @@ export function authenticateWithLogging(req: Request, res: Response, next: NextF
       })(req, res, next);
     })
     .catch(error => {
-      console.error('Rate limit check failed:', error);
+      logger.log('error', 'Rate limit check failed:', error);
       passport.authenticate('local', { session: false }, async (err, user, info) => {
         if (err) {
-          console.error('Authentication error:', err);
+          logger.log('error', 'Authentication error:', err);
 
           await AuthService.logLoginAttempt({
             provider: 'local',

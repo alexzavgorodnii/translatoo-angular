@@ -1,5 +1,6 @@
 import * as jose from 'jose';
 import { saveRefreshTokenToDb, findRefreshToken, revoke } from '../models/refresh-token.model';
+import { logger } from '../services/logger';
 
 export async function generateToken(payload: Record<string, unknown>) {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -60,7 +61,7 @@ export async function verifyRefreshTokenJwt(token: string) {
 
     return payload;
   } catch (error) {
-    console.error('Error verifying refresh token:', error);
+    logger.log('error', 'Error verifying refresh token:', error);
     throw new Error('Invalid or expired refresh token');
   }
 }
@@ -69,7 +70,7 @@ export async function invalidateRefreshToken(token: string) {
   try {
     await revoke(token);
   } catch (error) {
-    console.error('Error invalidating refresh token:', error);
+    logger.log('error', 'Error invalidating refresh token:', error);
     throw new Error('Failed to invalidate refresh token');
   }
 }

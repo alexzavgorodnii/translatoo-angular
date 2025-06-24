@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import './config/passport';
 import { authRouter } from './auth/auth.routes';
 import { ensureAuthenticated } from './middlewares/ensureAuthenticated';
+import { logger } from './services/logger';
 
 const app = express();
 
@@ -36,7 +37,7 @@ app.get('/api/user/profile', ensureAuthenticated, async (req, res) => {
     // You can add logic here to fetch user profile from database
     res.json({ message: 'User profile', userId, user: req.user });
   } catch (error) {
-    console.error('Profile fetch error:', error);
+    logger.log('error', 'Failed to fetch user profile', error);
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
 });

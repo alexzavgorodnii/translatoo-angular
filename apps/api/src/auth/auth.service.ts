@@ -7,6 +7,7 @@ import {
   getUserLoginHistory,
   getRecentFailedAttempts,
 } from '../models/login-history.model';
+import { logger } from '../services/logger';
 
 export async function registerLocalUser(data: { email: string; password: string; name: string }) {
   const user = await createUser({ email: data.email, name: data.name });
@@ -34,7 +35,7 @@ export async function logLoginAttempt(data: CreateLoginHistoryData) {
   try {
     return await createLoginHistory(data);
   } catch (error) {
-    console.error('Failed to log login attempt:', error);
+    logger.log('error', 'Failed to log login attempt', error);
     // Don't throw error to prevent login process from failing due to logging issues
   }
 }
@@ -44,8 +45,8 @@ export async function checkRateLimit(ipAddress: string, maxAttempts = 5, timeWin
     const failedAttempts = await getRecentFailedAttempts(ipAddress, timeWindowMinutes);
     return failedAttempts < maxAttempts;
   } catch (error) {
-    console.error('Failed to check rate limit:', error);
-    return true; // Allow login if rate limit check fails
+    logger.log('error', 'Failed to check rate limit', error);
+    return true;
   }
 }
 

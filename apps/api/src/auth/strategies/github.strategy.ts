@@ -1,15 +1,16 @@
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import passport from 'passport';
 import { findOrCreateSocialUser } from '../../models/auth-provider.model';
+import { logger } from '../../services/logger';
 
 // Check if GitHub OAuth credentials are configured
 const githubClientId = process.env.GITHUB_CLIENT_ID;
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
 
 if (!githubClientId) {
-  console.warn('GITHUB_CLIENT_ID is not set. GitHub OAuth will not be available.');
+  logger.log('warn', 'GITHUB_CLIENT_ID is not set. GitHub OAuth will not be available.');
 } else if (!githubClientSecret) {
-  console.warn('GITHUB_CLIENT_SECRET is not set. GitHub OAuth will not be available.');
+  logger.log('warn', 'GITHUB_CLIENT_SECRET is not set. GitHub OAuth will not be available.');
 } else {
   passport.use(
     new GitHubStrategy(

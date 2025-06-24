@@ -1,5 +1,6 @@
 import { LoginHistory } from 'shared-types';
 import { db } from '../config/db.config';
+import { logger } from '../services/logger';
 
 export interface CreateLoginHistoryData {
   userId?: string;
@@ -21,7 +22,7 @@ export async function createLoginHistory(data: CreateLoginHistoryData): Promise<
     const result = await db.query<LoginHistory>(query, values);
     return result.rows[0];
   } catch (error) {
-    console.error('Error in LoginHistoryModel.createLoginHistory:', error);
+    logger.log('error', 'Error in LoginHistoryModel.createLoginHistory:', error);
     throw new Error('Failed to create login history record');
   }
 }
@@ -39,7 +40,7 @@ export async function getUserLoginHistory(userId: string, limit = 10): Promise<L
     const result = await db.query<LoginHistory>(query, values);
     return result.rows;
   } catch (error) {
-    console.error('Error in LoginHistoryModel.getUserLoginHistory:', error);
+    logger.log('error', 'Error in LoginHistoryModel.getUserLoginHistory:', error);
     throw new Error('Failed to fetch user login history');
   }
 }
@@ -58,7 +59,7 @@ export async function getRecentFailedAttempts(ipAddress: string, timeWindowMinut
     const result = await db.query<{ count: string }>(query, values);
     return parseInt(result.rows[0].count, 10);
   } catch (error) {
-    console.error('Error in LoginHistoryModel.getRecentFailedAttempts:', error);
+    logger.log('error', 'Error in LoginHistoryModel.getRecentFailedAttempts:', error);
     throw new Error('Failed to fetch recent failed attempts');
   }
 }
@@ -79,7 +80,7 @@ export async function getLoginHistoryByProvider(
     const result = await db.query<LoginHistory>(query, values);
     return result.rows;
   } catch (error) {
-    console.error('Error in LoginHistoryModel.getLoginHistoryByProvider:', error);
+    logger.log('error', 'Error in LoginHistoryModel.getLoginHistoryByProvider:', error);
     throw new Error('Failed to fetch login history by provider');
   }
 }

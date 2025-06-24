@@ -1,6 +1,7 @@
 import { AuthProvider, User } from 'shared-types';
 import { db } from '../config/db.config';
 import { passwordHash, passwordVerify } from '../utils/password';
+import { logger } from '../services/logger';
 
 export async function createLocalAuth(userId: string, password: string): Promise<void> {
   const hash = await passwordHash(password);
@@ -9,7 +10,7 @@ export async function createLocalAuth(userId: string, password: string): Promise
   try {
     await db.query(query, values);
   } catch (error) {
-    console.error('Error in createLocalAuth:', error);
+    logger.log('error', 'Error creating local auth:', error);
     throw new Error('Failed to create local auth');
   }
 }
@@ -23,7 +24,7 @@ export async function findLocalAuthByEmail(email: string): Promise<AuthProvider 
     const result = await db.query<AuthProvider>(query, values);
     return result.rows[0] || null;
   } catch (error) {
-    console.error('Error in findLocalAuthByEmail:', error);
+    logger.log('error', 'Error in findLocalAuthByEmail:', error);
     throw new Error('Failed to fetch  local auth by email');
   }
 }
@@ -51,7 +52,7 @@ export async function findOrCreateSocialUser({
     const existing = await db.query(query, values);
     if (existing.rows[0]) return existing.rows[0];
   } catch (error) {
-    console.error('Error in findOrCreateSocialUser:', error);
+    logger.log('error', 'Error in findOrCreateSocialUser:', error);
     throw new Error('Failed to find or create social user');
   }
 
@@ -68,7 +69,7 @@ export async function findOrCreateSocialUser({
 
     return newUser;
   } catch (error) {
-    console.error('Error in findOrCreateSocialUser:', error);
+    logger.log('error', 'Error creating social user:', error);
     throw new Error('Failed to create social user');
   }
 }

@@ -1,5 +1,6 @@
 import { Pool, QueryResult } from 'pg';
 import 'dotenv/config';
+import { logger } from '../services/logger';
 
 class Db {
   private static instance: Db;
@@ -12,11 +13,8 @@ class Db {
       password: process.env.DB_PASSWORD,
       port: parseInt(process.env.DB_PORT || '5432', 10),
     });
-    this.pool.on('connect', () => {
-      console.log('Database connected');
-    });
     this.pool.on('error', err => {
-      console.error('Database error:', err);
+      logger.log('error', 'Database error: Unexpected error on idle client', err);
       process.exit(1);
     });
   }

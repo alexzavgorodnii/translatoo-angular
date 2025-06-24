@@ -1,5 +1,6 @@
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
+import { logger } from '../services/logger';
 
 const KEYLEN = 64;
 const SEPARATOR = '.';
@@ -17,7 +18,7 @@ export async function passwordVerify(password: string, hashed: string): Promise<
     const [saltHex, keyHex] = hashed.split(SEPARATOR);
 
     if (!saltHex || !keyHex) {
-      console.error('Invalid hashed password format');
+      logger.log('error', 'Invalid hashed password format');
       return false;
     }
 
@@ -27,7 +28,7 @@ export async function passwordVerify(password: string, hashed: string): Promise<
 
     return timingSafeEqual(key, derivedKey);
   } catch (error) {
-    console.error('Error verifying password:', error);
+    logger.log('error', 'Error verifying password:', error);
     return false;
   }
 }

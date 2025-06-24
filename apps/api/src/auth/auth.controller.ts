@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as AuthService from './auth.service';
 import { User } from 'shared-types';
 import { getClientIp, getUserAgent } from '../utils/client';
+import { logger } from '../services/logger';
 
 export async function register(req: Request, res: Response) {
   try {
@@ -14,7 +15,7 @@ export async function register(req: Request, res: Response) {
     const user = await AuthService.registerLocalUser({ email, password, name });
     res.status(201).json(user);
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.log('error', 'Registration error', error);
     res.status(500).json({ error: 'Internal server error during registration' });
   }
 }
@@ -46,7 +47,7 @@ export async function login(req: Request, res: Response) {
     const tokens = await AuthService.issueTokens(user.id);
     res.json(tokens);
   } catch (error) {
-    console.error('Login error:', error);
+    logger.log('error', 'Login error', error);
     res.status(500).json({ error: 'Internal server error during login' });
   }
 }
@@ -62,7 +63,7 @@ export async function refreshToken(req: Request, res: Response) {
     const newAccessToken = await AuthService.verifyAndRefresh(refreshToken);
     res.json({ accessToken: newAccessToken });
   } catch (error) {
-    console.error('Refresh token error:', error);
+    logger.log('error', 'Refresh token error', error);
     res.status(401).json({ error: 'Invalid or expired refresh token' });
   }
 }
@@ -78,7 +79,7 @@ export async function logout(req: Request, res: Response) {
     await AuthService.revokeRefreshToken(refreshToken);
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.log('error', 'Logout error', error);
     res.status(500).json({ error: 'Internal server error during logout' });
   }
 }
@@ -91,7 +92,7 @@ export async function getLoginHistory(req: Request, res: Response) {
     const loginHistory = await AuthService.getLoginHistoryForUser(user.id, limit);
     res.json(loginHistory);
   } catch (error) {
-    console.error('Get login history error:', error);
+    logger.log('error', 'Get login history error', error);
     res.status(500).json({ error: 'Failed to fetch login history' });
   }
 }

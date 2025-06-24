@@ -1,6 +1,7 @@
 import { db } from '../config/db.config';
 import { RefreshToken } from 'shared-types';
 import * as crypto from 'crypto';
+import { logger } from '../services/logger';
 
 export async function saveRefreshTokenToDb(
   userId: string,
@@ -21,7 +22,7 @@ export async function saveRefreshTokenToDb(
     const result = await db.query<RefreshToken>(query, values);
     return result.rows[0];
   } catch (error) {
-    console.error('Error saving refresh token:', error);
+    logger.log('error', 'Error saving refresh token:', error);
     throw new Error('Failed to save refresh token');
   }
 }
@@ -41,7 +42,7 @@ export async function findRefreshToken(refreshToken: string): Promise<RefreshTok
     const result = await db.query<RefreshToken>(query, values);
     return result.rows[0] ?? null;
   } catch (error) {
-    console.error('Error finding refresh token:', error);
+    logger.log('error', 'Error finding refresh token:', error);
     throw new Error('Failed to find refresh token');
   }
 }
@@ -60,7 +61,7 @@ export async function revoke(refreshToken: string): Promise<void> {
   try {
     await db.query(query, values);
   } catch (error) {
-    console.error('Error revoking refresh token:', error);
+    logger.log('error', 'Error revoking refresh token:', error);
     throw new Error('Failed to revoke refresh token');
   }
 }
@@ -76,7 +77,7 @@ export async function revokeAllUserRefreshTokens(userId: string): Promise<void> 
   try {
     await db.query(query, values);
   } catch (error) {
-    console.error('Error revoking user refresh tokens:', error);
+    logger.log('error', 'Error revoking user refresh tokens:', error);
     throw new Error('Failed to revoke user refresh tokens');
   }
 }
@@ -90,7 +91,7 @@ export async function cleanupExpiredTokens(): Promise<void> {
   try {
     await db.query(query);
   } catch (error) {
-    console.error('Error cleaning up expired tokens:', error);
+    logger.log('error', 'Error cleaning up expired tokens:', error);
     throw new Error('Failed to cleanup expired tokens');
   }
 }
