@@ -20,7 +20,7 @@ import { Translation } from 'shared-types';
       <lucide-icon [img]="Pencil" [size]="16"></lucide-icon>
     </button>
   `,
-  styleUrl: './translation-row-value.component.css',
+  styleUrl: './translation-row-value.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TranslationRowValueComponent {

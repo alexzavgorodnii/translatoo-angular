@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LanguageWithTranslations } from '../../../core/models/languages';
-import { SupabaseLanguagesApi } from '../../../core/services/supabase-api.service';
+import { SupabaseLanguagesApi } from '../../../core/services/api.service';
 import { Language } from 'shared-types';
 
 @Injectable({

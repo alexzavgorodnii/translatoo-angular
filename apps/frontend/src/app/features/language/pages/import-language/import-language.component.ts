@@ -224,7 +224,7 @@ import { ProjectStore } from '../../../project/store/project-store';
       }
     </div>
   `,
-  styleUrl: './import-language.component.css',
+  styleUrl: './import-language.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImportLanguageComponent {

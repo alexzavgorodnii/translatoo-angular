@@ -1,0 +1,21 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light dark;
+  @include mat.theme(
+    (
+      color: mat.$azure-palette,
+      typography: Roboto,
+      density: 0,
+    )
+  );
+
+  .mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field.mat-mdc-form-field
+    .mdc-notched-outline__notch {
+    border-right: 0;
+  }
+
+  .mat-mdc-form-field.compact .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}

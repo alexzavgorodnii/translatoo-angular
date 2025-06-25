@@ -17,7 +17,7 @@ import { MatCardModule } from '@angular/material/card';
       </mat-card-actions>
     </mat-card>
   `,
-  styleUrl: './empty-message.component.css',
+  styleUrl: './empty-message.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'flex h-full w-full items-center justify-center',

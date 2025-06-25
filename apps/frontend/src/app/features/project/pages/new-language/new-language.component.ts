@@ -130,7 +130,7 @@ import { Language, Translation } from 'shared-types';
       }
     </div>
   `,
-  styleUrl: './new-language.component.css',
+  styleUrl: './new-language.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewLanguageComponent {

@@ -9,7 +9,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     </mat-toolbar>
     <p>dashboard works!</p>
   `,
-  styleUrl: './dashboard.component.css',
+  styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {}

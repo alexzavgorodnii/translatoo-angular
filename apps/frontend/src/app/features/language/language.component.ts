@@ -241,7 +241,7 @@ import { Translation } from 'shared-types';
       }
     </div>
   `,
-  styleUrl: './language.component.css',
+  styleUrl: './language.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: MatPaginatorIntl, useClass: PaginatorIntlService }],
 })

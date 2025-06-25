@@ -7,7 +7,7 @@
   "generators": {
     "@schematics/angular:component": {
       "inlineTemplate": true,
-      "style": "css",
+      "style": "scss",
       "skipTests": true
     },
     "@schematics/angular:class": {
@@ -41,18 +41,17 @@
         "browser": "apps/frontend/src/main.ts",
         "polyfills": [],
         "tsConfig": "apps/frontend/tsconfig.app.json",
-        "inlineStyleLanguage": "css",
+        "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "public"
+            "input": "apps/frontend/public"
           }
         ],
         "styles": [
-          "apps/frontend/src/styles.css",
-          "apps/frontend/src/styles/theme.css",
-          "apps/frontend/src/styles/theme-own.css",
-          "apps/frontend/src/styles/ui.css"
+          "apps/frontend/src/styles.scss",
+          "apps/frontend/src/styles/theme.scss",
+          "apps/frontend/src/styles/ui.scss"
         ],
         "scripts": []
       },

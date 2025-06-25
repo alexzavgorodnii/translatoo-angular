@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
-import { User } from '@supabase/supabase-js';
+import { User } from 'shared-types';
 
 @Component({
   selector: 'app-profile',
@@ -61,7 +61,7 @@ import { User } from '@supabase/supabase-js';
       </mat-card>
     </div>
   `,
-  styleUrl: './profile.component.css',
+  styleUrl: './profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileComponent {
@@ -73,10 +73,9 @@ export class ProfileComponent {
   });
   constructor() {
     effect(() => {
-      console.log('User changed:', this.user());
       if (this.user()) {
         this.profileForm.patchValue({
-          name: this.user()?.user_metadata['name'] || '',
+          name: this.user()?.name || '',
           email: this.user()?.email || '',
         });
       }

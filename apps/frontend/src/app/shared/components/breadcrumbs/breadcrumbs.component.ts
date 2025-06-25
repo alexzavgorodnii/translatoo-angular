@@ -23,7 +23,7 @@ import { Breadcrumb } from '../../../core/models/breadcrumbs';
       }
     }
   `,
-  styleUrl: './breadcrumbs.component.css',
+  styleUrl: './breadcrumbs.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'flex flex-row items-center gap-2',

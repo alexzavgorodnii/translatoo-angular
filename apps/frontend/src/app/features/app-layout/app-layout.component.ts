@@ -74,7 +74,7 @@ import { AuthService } from '../../core/services/auth.service';
       </mat-drawer-content>
     </mat-drawer-container>
   `,
-  styleUrl: './app-layout.component.css',
+  styleUrl: './app-layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppLayoutComponent {
@@ -107,7 +107,8 @@ export class AppLayoutComponent {
   readonly LogOut = LogOut;
 
   logoutClickHandler(): void {
-    this.authService.logout().subscribe({
+    const refreshToken: string = localStorage.getItem('refreshToken')!;
+    this.authService.logout(refreshToken).subscribe({
       next: () => {
         this.router.navigate(['/sign-in']);
       },

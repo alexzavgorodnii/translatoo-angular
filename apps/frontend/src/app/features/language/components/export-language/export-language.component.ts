@@ -56,7 +56,7 @@ export interface ExportLanguageComponentData {
       <button mat-flat-button (click)="onExportClick()" cdkFocusInitial>Export</button>
     </mat-dialog-actions>
   `,
-  styleUrl: './export-language.component.css',
+  styleUrl: './export-language.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExportLanguageComponent {

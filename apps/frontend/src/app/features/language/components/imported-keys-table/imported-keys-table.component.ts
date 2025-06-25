@@ -73,7 +73,7 @@ import { SelectionModel } from '@angular/cdk/collections';
       aria-label="Select page of GitHub search results"
     ></mat-paginator>
   `,
-  styleUrl: './imported-keys-table.component.css',
+  styleUrl: './imported-keys-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImportedKeysTableComponent implements OnInit, AfterViewInit {

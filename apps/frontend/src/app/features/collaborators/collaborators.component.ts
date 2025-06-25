@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-collaborators',
   imports: [],
   template: `<p>collaborators works!</p>`,
-  styleUrl: './collaborators.component.css',
+  styleUrl: './collaborators.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CollaboratorsComponent {}

@@ -61,7 +61,7 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
       }
     </div>
   `,
-  styleUrl: './projects.component.css',
+  styleUrl: './projects.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsComponent {

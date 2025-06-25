@@ -64,7 +64,7 @@ export interface TranslationValueEditComponentData {
       <button mat-flat-button (click)="onSaveClick()" cdkFocusInitial [disabled]="updateInProgress()">Save</button>
     </mat-dialog-actions>
   `,
-  styleUrl: './translation-value-edit.component.css',
+  styleUrl: './translation-value-edit.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TranslationValueEditComponent {

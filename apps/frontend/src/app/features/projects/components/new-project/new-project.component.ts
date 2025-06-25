@@ -33,7 +33,7 @@ import { ProjectsService } from '../../services/projects.service';
       <button mat-flat-button (click)="onAddClick()" cdkFocusInitial>Add</button>
     </mat-dialog-actions>
   `,
-  styleUrl: './new-project.component.css',
+  styleUrl: './new-project.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewProjectComponent {

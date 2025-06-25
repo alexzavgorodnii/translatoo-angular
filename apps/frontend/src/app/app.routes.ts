@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { authenticatedGuard } from './core/guards/authenticated.guard';
 
 export const routes: Routes = [
   {
@@ -62,6 +63,13 @@ export const routes: Routes = [
   {
     title: 'Sign In | Translatoo',
     path: 'sign-in',
+    canActivate: [authenticatedGuard],
     loadComponent: () => import('./features/sign-in/sign-in.component').then(m => m.SignInComponent),
+  },
+  {
+    title: 'Sign Up | Translatoo',
+    path: 'sign-up',
+    canActivate: [authenticatedGuard],
+    loadComponent: () => import('./features/sign-up/sign-up.component').then(m => m.SignUpComponent),
   },
 ];

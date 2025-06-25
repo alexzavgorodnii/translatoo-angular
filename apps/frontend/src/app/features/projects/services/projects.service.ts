@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProjectWithLanguages } from '../../../core/models/projects';
-import { SupabaseProjectsApi } from '../../../core/services/supabase-api.service';
+import { SupabaseProjectsApi } from '../../../core/services/api.service';
 import { Project } from 'shared-types';
 
 @Injectable({

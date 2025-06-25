@@ -1,11 +1,13 @@
-import { signal } from '@angular/core';
-import { createClient, OAuthResponse, SupabaseClient, User } from '@supabase/supabase-js';
+import { inject, signal } from '@angular/core';
+import { createClient, OAuthResponse, SupabaseClient, User as SupaUser } from '@supabase/supabase-js';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LanguageWithTranslations } from '../models/languages';
 import { ProjectWithLanguages } from '../models/projects';
 import { TranslationFromFile } from '../models/translations';
-import { Language, Project, Translation } from 'shared-types';
+import { Language, Project, Translation, User } from 'shared-types';
+import { HttpClient } from '@angular/common/http';
+import { AuthResponse } from '../models/auth';
 
 export abstract class SupabaseApiBase {
   private readonly _supabase = createClient(environment.SUPABASE_URL, environment.SUPABASE_KEY);
@@ -14,7 +16,31 @@ export abstract class SupabaseApiBase {
   }
 }
 
+export abstract class ApiBase {
+  private readonly _http = inject(HttpClient);
+  private readonly _apiUrl = environment.API_URL;
+  get http(): HttpClient {
+    return this._http;
+  }
+  get apiUrl(): string {
+    return this._apiUrl;
+  }
+}
+
 export abstract class SupabaseAuthApi extends SupabaseApiBase {
+  private _user = signal<SupaUser | null>(null);
+  get user(): SupaUser | null {
+    return this._user();
+  }
+  set user(value: SupaUser | null) {
+    this._user.set(value);
+  }
+  abstract googleLogin(): Observable<OAuthResponse>;
+  abstract logout(): Observable<void>;
+  abstract isAuth(): Observable<boolean>;
+}
+
+export abstract class AuthApi extends ApiBase {
   private _user = signal<User | null>(null);
   get user(): User | null {
     return this._user();
@@ -22,9 +48,11 @@ export abstract class SupabaseAuthApi extends SupabaseApiBase {
   set user(value: User | null) {
     this._user.set(value);
   }
-  abstract googleLogin(): Observable<OAuthResponse>;
-  abstract logout(): Observable<void>;
-  abstract isAuth(): Observable<boolean>;
+  abstract signIn(email: string, password: string): Observable<AuthResponse>;
+  abstract signUp(email: string, password: string, name?: string): Observable<User>;
+  abstract googleLogin(): Observable<AuthResponse>;
+  abstract logout(refreshToken: string): Observable<void>;
+  abstract isAuth(): boolean;
 }
 
 export abstract class SupabaseTranslationsApi extends SupabaseApiBase {

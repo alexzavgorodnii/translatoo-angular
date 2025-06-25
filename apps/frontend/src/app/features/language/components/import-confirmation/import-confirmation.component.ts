@@ -50,7 +50,7 @@ export interface ImportConfirmationComponentData {
       <button mat-flat-button (click)="onConfirmClick()" cdkFocusInitial>Confirm</button>
     </mat-dialog-actions>
   `,
-  styleUrl: './import-confirmation.component.css',
+  styleUrl: './import-confirmation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImportConfirmationComponent {

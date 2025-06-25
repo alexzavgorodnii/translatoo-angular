@@ -52,7 +52,7 @@ import { Translation } from 'shared-types';
       <button mat-flat-button (click)="onSaveClick()" cdkFocusInitial>Save</button>
     </mat-dialog-actions>
   `,
-  styleUrl: './edit-translation-key-dialog.component.css',
+  styleUrl: './edit-translation-key-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditTranslationKeyDialogComponent {
