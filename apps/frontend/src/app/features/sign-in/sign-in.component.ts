@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { switchMap, finalize, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
@@ -17,6 +18,7 @@ import { AuthService } from '../../core/services/auth.service';
     MatInputModule,
     MatFormFieldModule,
     MatDividerModule,
+    MatSnackBarModule,
     ReactiveFormsModule,
     RouterLink,
   ],
@@ -77,10 +79,12 @@ import { AuthService } from '../../core/services/auth.service';
     class: 'flex w-full h-screen items-center justify-center bg-gray-100 dark:bg-gray-900',
   },
 })
-export class SignInComponent {
+export class SignInComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly isLoading = signal(false);
 
@@ -88,6 +92,36 @@ export class SignInComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['error']) {
+        let errorMessage = 'Authentication failed. Please try again.';
+
+        switch (params['error']) {
+          case 'oauth_failed':
+            errorMessage = 'OAuth authentication failed. Please try again.';
+            break;
+          case 'oauth_error':
+            errorMessage = 'An error occurred during authentication. Please try again.';
+            break;
+        }
+
+        this.snackBar.open(errorMessage, 'Close', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+        });
+
+        // Clear the error parameter from URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true,
+        });
+      }
+    });
+  }
 
   emailLogin(): void {
     if (this.signInForm.invalid || this.isLoading()) {
@@ -136,26 +170,7 @@ export class SignInComponent {
     }
   }
 
-  googleLogin() {
-    this.authService
-      .googleLogin()
-      .pipe(
-        switchMap(() => {
-          // After successful Google sign-in, fetch user profile
-          return this.authService.fetchUserProfile();
-        }),
-        catchError(error => {
-          console.error('Google login error:', error);
-          return of(null);
-        }),
-      )
-      .subscribe({
-        next: user => {
-          if (user) {
-            console.log('Google authentication successful, user profile loaded:', user);
-            this.router.navigate(['/dashboard']);
-          }
-        },
-      });
+  googleLogin(): void {
+    this.authService.googleLogin();
   }
 }

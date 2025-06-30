@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { AuthApi } from './api.service';
 import { User } from 'shared-types';
 import { AuthResponse } from '../models/auth';
@@ -8,10 +8,8 @@ import { AuthResponse } from '../models/auth';
   providedIn: 'root',
 })
 export class AuthService extends AuthApi {
-  // Signal to track authentication status
   private readonly isAuthenticated = signal<boolean>(false);
 
-  // Public readonly signal for authentication status
   readonly authenticated = this.isAuthenticated.asReadonly();
 
   constructor() {
@@ -82,12 +80,31 @@ export class AuthService extends AuthApi {
     return null;
   }
 
-  googleLogin(): Observable<AuthResponse> {
-    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/google`).pipe(
-      tap(authResponse => {
-        this.saveAuthData(authResponse);
-      }),
-    );
+  googleLogin(): void {
+    window.location.href = `${this.apiUrl}/auth/google`;
+  }
+
+  handleOAuthCallback(): Observable<User | null> {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('accessToken');
+    const refreshToken = urlParams.get('refreshToken');
+    const error = urlParams.get('error');
+
+    if (error) {
+      console.error('OAuth error:', error);
+      return of(null);
+    }
+
+    if (accessToken && refreshToken) {
+      const authResponse: AuthResponse = { accessToken, refreshToken };
+      this.saveAuthData(authResponse);
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      return this.fetchUserProfile();
+    }
+
+    return of(null);
   }
 
   signUp(email: string, password: string, name?: string): Observable<User> {

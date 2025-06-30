@@ -122,10 +122,6 @@ export class SignUpComponent {
   }
 
   googleLogin() {
-    this.authService.googleLogin().subscribe({
-      next: () => {
-        this.router.navigate(['/']);
-      },
-    });
+    this.authService.googleLogin();
   }
 }

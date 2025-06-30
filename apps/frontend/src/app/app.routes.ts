@@ -72,4 +72,9 @@ export const routes: Routes = [
     canActivate: [authenticatedGuard],
     loadComponent: () => import('./features/sign-up/sign-up.component').then(m => m.SignUpComponent),
   },
+  {
+    title: 'Auth Callback | Translatoo',
+    path: 'auth/callback',
+    loadComponent: () => import('./features/auth-callback/auth-callback.component').then(m => m.AuthCallbackComponent),
+  },
 ];

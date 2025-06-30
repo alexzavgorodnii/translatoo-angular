@@ -45,9 +45,26 @@ export async function login(req: Request, res: Response) {
     }
 
     const tokens = await AuthService.issueTokens(user.id);
+
+    // For OAuth callbacks, redirect to frontend with tokens
+    if (provider === 'google' || provider === 'github') {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+      const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;
+      return res.redirect(redirectUrl);
+    }
+
+    // For local login, return JSON response
     res.json(tokens);
   } catch (error) {
     logger.log('error', 'Login error', error);
+
+    // For OAuth callbacks, redirect to frontend with error
+    if (req.route?.path?.includes('google') || req.route?.path?.includes('github')) {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+      const redirectUrl = `${frontendUrl}/auth/callback?error=authentication_failed`;
+      return res.redirect(redirectUrl);
+    }
+
     res.status(500).json({ error: 'Internal server error during login' });
   }
 }
