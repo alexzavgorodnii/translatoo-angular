@@ -52,7 +52,8 @@ export abstract class AuthApi extends ApiBase {
   abstract signUp(email: string, password: string, name?: string): Observable<User>;
   abstract googleLogin(): void;
   abstract logout(refreshToken: string): Observable<void>;
-  abstract isAuth(): boolean;
+  abstract fetchUserProfile(): Observable<User>;
+  abstract refreshToken(): Observable<string | null>;
 }
 
 export abstract class SupabaseTranslationsApi extends SupabaseApiBase {

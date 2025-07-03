@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import { CookieOptions, Request, Response } from 'express';
 import * as AuthService from './auth.service';
 import { User } from 'shared-types';
 import { getClientIp, getUserAgent } from '../utils/client';
 import { logger } from '../services/logger';
+import { verifyRefreshToken } from '../utils/jwt';
 
 export async function register(req: Request, res: Response) {
   try {
@@ -45,20 +46,29 @@ export async function login(req: Request, res: Response) {
     }
 
     const tokens = await AuthService.issueTokens(user.id);
+    const { accessToken, refreshToken } = tokens;
+    const refreshTokenCookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    } as CookieOptions;
 
-    // For OAuth callbacks, redirect to frontend with tokens
     if (provider === 'google' || provider === 'github') {
+      res.cookie('refresh_token', refreshToken, refreshTokenCookieOptions);
+
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-      const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;
+      const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}`;
+
       return res.redirect(redirectUrl);
     }
+    res.cookie('refresh_token', refreshToken, refreshTokenCookieOptions);
 
-    // For local login, return JSON response
-    res.json(tokens);
+    res.json({ accessToken });
   } catch (error) {
     logger.log('error', 'Login error', error);
 
-    // For OAuth callbacks, redirect to frontend with error
     if (req.route?.path?.includes('google') || req.route?.path?.includes('github')) {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
       const redirectUrl = `${frontendUrl}/auth/callback?error=authentication_failed`;
@@ -71,13 +81,14 @@ export async function login(req: Request, res: Response) {
 
 export async function refreshToken(req: Request, res: Response) {
   try {
-    const { refreshToken } = req.body;
+    const token = req.cookies.refresh_token;
+    if (!token) return res.sendStatus(401);
 
-    if (!refreshToken) {
-      return res.status(400).json({ error: 'Refresh token is required' });
-    }
+    // validate refresh token
+    const user = verifyRefreshToken(token);
+    if (!user) return res.sendStatus(403);
 
-    const newAccessToken = await AuthService.verifyAndRefresh(refreshToken);
+    const newAccessToken = await AuthService.verifyAndRefresh(token);
     res.json({ accessToken: newAccessToken });
   } catch (error) {
     logger.log('error', 'Refresh token error', error);
@@ -87,13 +98,19 @@ export async function refreshToken(req: Request, res: Response) {
 
 export async function logout(req: Request, res: Response) {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refresh_token;
 
     if (!refreshToken) {
       return res.status(400).json({ error: 'Refresh token is required' });
     }
 
     await AuthService.revokeRefreshToken(refreshToken);
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+    });
     res.status(200).json({ success: true });
   } catch (error) {
     logger.log('error', 'Logout error', error);

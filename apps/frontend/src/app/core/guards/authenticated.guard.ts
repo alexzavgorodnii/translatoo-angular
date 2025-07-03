@@ -4,7 +4,7 @@ import { AuthService } from '../services/auth.service';
 
 export const authenticatedGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const isAuth = inject(AuthService).isAuth();
+  const isAuth = inject(AuthService).user;
   if (isAuth) {
     router.navigate(['/', 'dashboard']);
     return false;

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { finalize, map, Observable, of, tap } from 'rxjs';
 import { AuthApi } from './api.service';
 import { User } from 'shared-types';
 import { AuthResponse } from '../models/auth';
@@ -8,76 +8,31 @@ import { AuthResponse } from '../models/auth';
   providedIn: 'root',
 })
 export class AuthService extends AuthApi {
+  private _accessToken = signal<string | null>(null);
   private readonly isAuthenticated = signal<boolean>(false);
+  private refreshing = false;
 
   readonly authenticated = this.isAuthenticated.asReadonly();
+
+  set accessToken(token: string | null) {
+    this._accessToken.set(token);
+  }
+
+  get accessToken(): string | null {
+    return this._accessToken();
+  }
 
   constructor() {
     super();
     // Check for existing authentication on service initialization
-    this.checkStoredAuth();
-  }
-
-  /**
-   * Check for stored authentication tokens and validate them
-   */
-  private checkStoredAuth(): void {
-    const accessToken = localStorage.getItem('accessToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-    const storedUser = this.getStoredUser();
-
-    if (accessToken && refreshToken) {
-      this.isAuthenticated.set(true);
-
-      if (storedUser) {
-        this.user = storedUser;
-      }
-
-      // Optionally validate token and refresh user profile
-      // this.fetchUserProfile().subscribe();
-    }
-  }
-
-  /**
-   * Save authentication tokens and user data
-   */
-  private saveAuthData(authResponse: AuthResponse, userData?: User): void {
-    localStorage.setItem('accessToken', authResponse.accessToken);
-    localStorage.setItem('refreshToken', authResponse.refreshToken);
-
-    if (userData) {
-      localStorage.setItem('user', JSON.stringify(userData));
-      this.user = userData; // Use the inherited user property
-    }
-
-    this.isAuthenticated.set(true);
   }
 
   /**
    * Clear all authentication data
    */
   private clearAuthData(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
     this.user = null; // Use the inherited user property
     this.isAuthenticated.set(false);
-  }
-
-  /**
-   * Get stored user data
-   */
-  getStoredUser(): User | null {
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      try {
-        return JSON.parse(userJson) as User;
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        return null;
-      }
-    }
-    return null;
   }
 
   googleLogin(): void {
@@ -87,7 +42,6 @@ export class AuthService extends AuthApi {
   handleOAuthCallback(): Observable<User | null> {
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get('accessToken');
-    const refreshToken = urlParams.get('refreshToken');
     const error = urlParams.get('error');
 
     if (error) {
@@ -95,9 +49,9 @@ export class AuthService extends AuthApi {
       return of(null);
     }
 
-    if (accessToken && refreshToken) {
-      const authResponse: AuthResponse = { accessToken, refreshToken };
-      this.saveAuthData(authResponse);
+    if (accessToken) {
+      this.accessToken = accessToken;
+      this.isAuthenticated.set(true);
 
       window.history.replaceState({}, document.title, window.location.pathname);
 
@@ -135,38 +89,50 @@ export class AuthService extends AuthApi {
           headers: {
             'Content-Type': 'application/json',
           },
+          withCredentials: true,
         },
       )
       .pipe(
         tap(authResponse => {
-          this.saveAuthData(authResponse);
+          this.accessToken = authResponse.accessToken;
+          this.isAuthenticated.set(true);
+
+          this.fetchUserProfile().subscribe(userData => {
+            this.user = userData;
+          });
         }),
       );
   }
 
-  /**
-   * Fetch user profile after authentication
-   */
   fetchUserProfile(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/auth/profile`).pipe(
+    return this.http.get<User>(`${this.apiUrl}/user/profile`).pipe(
       tap(userData => {
-        this.user = userData; // Use the inherited user property
-        localStorage.setItem('user', JSON.stringify(userData));
+        this.user = userData;
       }),
     );
   }
 
-  logout(refreshToken?: string): Observable<void> {
-    const token = refreshToken || localStorage.getItem('refreshToken');
+  refreshToken(): Observable<string> {
+    if (this.refreshing) return of(null as any);
+    this.refreshing = true;
 
+    return this.http.post<{ accessToken: string }>(`${this.apiUrl}/auth/refresh`, {}, { withCredentials: true }).pipe(
+      tap(res => (this.accessToken = res.accessToken)),
+      map(res => res.accessToken),
+      finalize(() => (this.refreshing = false)),
+    );
+  }
+
+  logout(): Observable<void> {
     return this.http
       .post<void>(
         `${this.apiUrl}/auth/logout`,
-        { refreshToken: token },
+        {},
         {
           headers: {
             'Content-Type': 'application/json',
           },
+          withCredentials: true,
         },
       )
       .pipe(
@@ -174,27 +140,5 @@ export class AuthService extends AuthApi {
           this.clearAuthData();
         }),
       );
-  }
-
-  /**
-   * Check if user is authenticated
-   */
-  isAuth(): boolean {
-    const token = localStorage.getItem('accessToken');
-    return !!token;
-  }
-
-  /**
-   * Get access token
-   */
-  getAccessToken(): string | null {
-    return localStorage.getItem('accessToken');
-  }
-
-  /**
-   * Get refresh token
-   */
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
   }
 }

@@ -64,5 +64,12 @@
         "watchDepsTargetName": "watch-deps"
       }
     }
-  ]
+  ],
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "useDaemonProcess": true
+      }
+    }
+  }
 }

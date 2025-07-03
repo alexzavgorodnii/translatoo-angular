@@ -107,8 +107,7 @@ export class AppLayoutComponent {
   readonly LogOut = LogOut;
 
   logoutClickHandler(): void {
-    const refreshToken: string = localStorage.getItem('refreshToken')!;
-    this.authService.logout(refreshToken).subscribe({
+    this.authService.logout().subscribe({
       next: () => {
         this.router.navigate(['/sign-in']);
       },

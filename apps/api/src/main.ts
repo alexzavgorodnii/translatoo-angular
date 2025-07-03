@@ -8,6 +8,8 @@ import './config/passport';
 import { authRouter } from './auth/auth.routes';
 import { ensureAuthenticated } from './middlewares/ensureAuthenticated';
 import { logger } from './services/logger';
+import * as https from 'https';
+import * as fs from 'fs';
 
 const app = express();
 
@@ -60,8 +62,15 @@ app.get('/api', async (req, res) => {
   res.send({ message: 'Welcome to api!' });
 });
 
-const port = process.env.PORT || 3333;
-const server = app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}/api`);
-});
-server.on('error', console.error);
+const port = process.env.PORT || 3001;
+https
+  .createServer(
+    {
+      key: fs.readFileSync('./cert/localhost-key.pem'),
+      cert: fs.readFileSync('./cert/localhost.pem'),
+    },
+    app,
+  )
+  .listen(port, () => {
+    console.log(`Listening at https://localhost:${port}/api`);
+  });
