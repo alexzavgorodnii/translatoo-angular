@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
 import { logger } from '../services/logger';
+import { User } from 'shared-types';
 
 export async function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
@@ -11,7 +12,7 @@ export async function ensureAuthenticated(req: Request, res: Response, next: Nex
   const token = auth.split(' ')[1];
   try {
     const { payload } = await verifyToken(token);
-    req.user = payload;
+    req.user = payload as User;
     next();
   } catch (error) {
     logger.log('error', 'Token verification failed:', error);

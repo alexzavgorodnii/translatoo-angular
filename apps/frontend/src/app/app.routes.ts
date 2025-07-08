@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { authenticatedGuard } from './core/guards/authenticated.guard';
+import { profileResolver } from './features/profile/resolvers/profile.resolver';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,9 @@ export const routes: Routes = [
       {
         title: 'Profile | Translatoo',
         path: 'profile',
+        resolve: {
+          user: profileResolver,
+        },
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
       },
       {

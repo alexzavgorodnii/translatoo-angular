@@ -56,6 +56,12 @@ export abstract class AuthApi extends ApiBase {
   abstract refreshToken(): Observable<string | null>;
 }
 
+export abstract class UserApi extends ApiBase {
+  abstract getUser(): Observable<User>;
+  abstract updateUser(id: string, name: string, email: string): Observable<User>;
+  abstract updateUserPassword(id: string, password: string): Observable<User>;
+}
+
 export abstract class SupabaseTranslationsApi extends SupabaseApiBase {
   abstract addTranslations(translate: Translation[]): Promise<Translation[]>;
   abstract importScriptTranslations(

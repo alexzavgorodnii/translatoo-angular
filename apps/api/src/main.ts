@@ -10,6 +10,7 @@ import { ensureAuthenticated } from './middlewares/ensureAuthenticated';
 import { logger } from './services/logger';
 import * as https from 'https';
 import * as fs from 'fs';
+import { usersRouter } from './users/users.routes';
 
 const app = express();
 
@@ -30,9 +31,11 @@ app.use(passport.initialize());
 
 // Auth routes
 app.use('/api/auth', authRouter);
+// Profile routes
+app.use('/api', usersRouter);
 
 // User profile route (protected)
-app.get('/api/user/profile', ensureAuthenticated, async (req, res) => {
+app.get('/api/profile', ensureAuthenticated, async (req, res) => {
   try {
     const payload = req.user as { id: string };
     const userId = payload.id;

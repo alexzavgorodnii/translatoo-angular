@@ -24,12 +24,8 @@ export class AuthService extends AuthApi {
 
   constructor() {
     super();
-    // Check for existing authentication on service initialization
   }
 
-  /**
-   * Clear all authentication data
-   */
   private clearAuthData(): void {
     this.user = null; // Use the inherited user property
     this.isAuthenticated.set(false);
@@ -105,7 +101,7 @@ export class AuthService extends AuthApi {
   }
 
   fetchUserProfile(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/user/profile`).pipe(
+    return this.http.get<User>(`${this.apiUrl}/profile`).pipe(
       tap(userData => {
         this.user = userData;
       }),

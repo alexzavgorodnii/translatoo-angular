@@ -83,7 +83,7 @@ export class AppLayoutComponent {
       title: 'Dashboard',
       icon: LayoutDashboard,
       link: '/dashboard',
-      enabled: false,
+      enabled: true,
     },
     {
       title: 'Projects',

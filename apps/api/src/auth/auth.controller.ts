@@ -58,7 +58,7 @@ export async function login(req: Request, res: Response) {
     if (provider === 'google' || provider === 'github') {
       res.cookie('refresh_token', refreshToken, refreshTokenCookieOptions);
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://localhost:3000';
       const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}`;
 
       return res.redirect(redirectUrl);

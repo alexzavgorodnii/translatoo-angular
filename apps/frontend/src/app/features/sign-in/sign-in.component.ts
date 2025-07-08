@@ -25,10 +25,17 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <mat-card appearance="raised" class="w-full max-w-md p-5">
       <mat-card-header class="mb-4 flex flex-col items-center text-center">
-        <mat-card-title>Welcome</mat-card-title>
-        <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
+        <mat-card-title>Welcome back</mat-card-title>
+        <mat-card-subtitle>Continue with your Google account</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
+        <button class="_google-btn mx-auto w-full" (click)="googleLogin()">
+          <img src="google-icon.svg" alt="Google Logo" class="_google-btn__icon" />
+          <span>Continue with Google</span>
+        </button>
+        <div class="my-4 flex items-center justify-center">
+          <span class="px-4 text-sm text-gray-500">Or continue with</span>
+        </div>
         <form [formGroup]="signInForm" (ngSubmit)="emailLogin()" class="flex flex-col gap-4">
           <mat-form-field floatLabel="always" appearance="outline" class="w-full">
             <mat-label>Email</mat-label>
@@ -46,7 +53,7 @@ import { AuthService } from '../../core/services/auth.service';
             }
           </mat-form-field>
 
-          <button mat-raised-button color="primary" type="submit" class="w-full">
+          <button matButton="filled" type="submit" class="w-full">
             @if (isLoading()) {
               Signing in...
             } @else {
@@ -54,15 +61,6 @@ import { AuthService } from '../../core/services/auth.service';
             }
           </button>
         </form>
-
-        <div class="flex items-center justify-center">
-          <span class="px-4 text-sm text-gray-500">or</span>
-        </div>
-
-        <button class="_google-btn mx-auto mt-2 w-full" (click)="googleLogin()">
-          <img src="google-icon.svg" alt="Google Logo" class="_google-btn__icon" />
-          <span>Continue with Google</span>
-        </button>
 
         <div class="mt-4 text-center">
           <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -113,7 +111,6 @@ export class SignInComponent implements OnInit {
           verticalPosition: 'top',
         });
 
-        // Clear the error parameter from URL
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: {},
@@ -136,7 +133,6 @@ export class SignInComponent implements OnInit {
         .signIn(email!, password!)
         .pipe(
           switchMap(() => {
-            // After successful sign-in, fetch user profile
             return this.authService.fetchUserProfile();
           }),
           finalize(() => {
@@ -144,25 +140,19 @@ export class SignInComponent implements OnInit {
           }),
           catchError(error => {
             console.error('Email login error:', error);
-            // Handle different types of errors
             if (error.status === 401) {
-              // Invalid credentials
               console.error('Invalid email or password');
             } else if (error.status === 500) {
-              // Server error
               console.error('Server error. Please try again later.');
             } else {
-              // Other errors
               console.error('An unexpected error occurred');
             }
-            return of(null); // Return null to handle error gracefully
+            return of(null);
           }),
         )
         .subscribe({
           next: user => {
             if (user) {
-              // Authentication and user fetch successful
-              console.log('User authenticated and profile loaded:', user);
               this.router.navigate(['/dashboard']);
             }
           },
